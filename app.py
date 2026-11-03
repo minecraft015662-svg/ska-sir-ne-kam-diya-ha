@@ -2596,6 +2596,17 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
                     <input type="number" name="disk" class="form-control" value="20" min="5" placeholder="e.g. 20">
                 </div>
                 <div class="form-group">
+                    <label>VPS Type</label>
+                    <select name="vps_type" class="form-control">
+                        <option value="lxc" selected>LXC container</option>
+                        <option value="kvm">KVM VM (KVM ON)</option>
+                        <option value="nonkvm">Non-KVM VM (KVM OFF)</option>
+                    </select>
+                    <label class="check" style="margin-top:8px;display:flex;align-items:center;gap:8px;font-size:12px;">
+                        <input type="checkbox" name="nesting" value="1"> Nesting ON (Docker / nested VMs)
+                    </label>
+                </div>
+                <div class="form-group">
                     <label>Server Type</label>
                     <select name="server_type" class="form-control" required>
                         <option value="shared">Shared — uses the shared oversell pool</option>
@@ -10656,7 +10667,7 @@ def admin_panel():
     settings = get_settings()
     conn.close()
     return render_template('admin.html', users=users, vps_list=all_vps, nodes=nodes, total_users=total_users, total_vps=total_vps, active_vps=active_vps, expiring_count=expiring_count, settings=settings)
-@app.route('/admin/create-vps', methods=['POST'])
+@app.route('/admin/create-vps', methods=['GET', 'POST'])
 @admin_required
 @limiter.limit(lambda: get_rate_limit('heavy'))
 def admin_create_vps():
@@ -13103,6 +13114,16 @@ def _create_vps_for_user(user, data):
     disk_gb = int(data.get("disk_gb", 20))
     server_type = str(data.get("server_type") or data.get("type") or "shared").strip().lower()
     max_backups = max(0, min(10, int(data.get("max_backups", 0) or 0)))
+    vps_type = str(data.get("vps_type") or "lxc").strip().lower()
+    vps_type = {"vm": "kvm", "kvm-vm": "kvm", "qemu": "kvm",
+                "non-kvm": "nonkvm", "non_kvm": "nonkvm", "tcg": "nonkvm"}.get(vps_type, vps_type)
+    if vps_type not in ("lxc", "kvm", "nonkvm"):
+        vps_type = "lxc"
+    nesting = bool(data.get("nesting"))
+    try:
+        from core import vps_types as _vps_types
+    except ImportError:  # pragma: no cover - flat layout
+        import vps_types as _vps_types
     if server_type not in ("shared", "dedicated"):
         raise ValueError("Server type must be Shared or Dedicated.")
     if not (512 <= ram_mb <= 65536 and 1 <= cpu_cores <= 32 and 5 <= disk_gb <= 1000):
@@ -13129,10 +13150,23 @@ def _create_vps_for_user(user, data):
         cpu = f"{cpu_cores} vCPU"
         disk = f"{disk_gb}GB"
         image = _os_image_alias(os_type)
+        instance_info = {}
         if node["is_local"]:
-            container_id = lxc_create(name, os_type, ram, cpu, disk)
+            if vps_type == "lxc":
+                if not _vps_types.capabilities()["incus"]:
+                    raise RuntimeError(
+                        "Is node par Incus/LXD install nahi hai. Node par 'sudo bash omega.sh --install' "
+                        "chalao ya kisi doosre node ko select karo."
+                    )
+                container_id = lxc_create(name, os_type, ram, cpu, disk)
+            else:
+                instance_info = _vps_types.create_instance(
+                    name, image, vps_type, nesting, cpu_cores, ram_mb, disk_gb
+                )
+                container_id = instance_info.get("name") or name
         else:
-            payload = {"name": name, "image": image, "ram": ram, "cpu": cpu, "disk": disk}
+            payload = {"name": name, "image": image, "ram": ram, "cpu": cpu, "disk": disk,
+                       "vps_type": vps_type, "nesting": bool(nesting)}
             result, status = call_node_api(node["node_url"], node["api_key"], "/api/container/create",
                                            method="POST", data=payload)
             if status not in (200, 201) or result.get("error"):
@@ -13141,19 +13175,31 @@ def _create_vps_for_user(user, data):
 
         password = secrets.token_urlsafe(16)
         ssh_link = ""
-        if node["is_local"]:
+        if node["is_local"] and vps_type == "nonkvm":
+            password = instance_info.get("ssh_password") or password
+            ssh_host = instance_info.get("ssh_host") or "127.0.0.1"
+            ssh_port = instance_info.get("ssh_port") or ""
+            ssh_link = f"ssh root@{ssh_host}" + (f" -p {ssh_port}" if ssh_port else "")
+        elif node["is_local"]:
             code, output = lxc_attach(
                 container_id, "printf '%s\\n' " + shlex.quote("root:" + password) + " | chpasswd", timeout=20
             )
             if code != 0:
-                raise RuntimeError("Container was created, but setting its root password failed")
+                if vps_type == "kvm":
+                    app.logger.warning("KVM guest %s has no agent; set the root password from the console", container_id)
+                    add_log("warning", f"{name}: KVM guest created; set the root password from the console", "vps")
+                else:
+                    raise RuntimeError("Container was created, but setting its root password failed")
         else:
             result, status = call_node_api(
                 node["node_url"], node["api_key"],
                 f"/api/container/{container_id}/regen-ssh", method="POST", data={"method": "sshx"}
             )
             if status != 200 or result.get("error"):
-                raise RuntimeError("Container was created, but the remote agent could not provision credentials")
+                if vps_type == "nonkvm":
+                    app.logger.warning("Non-KVM node %s could not provision credentials", node["name"])
+                else:
+                    raise RuntimeError("Container was created, but the remote agent could not provision credentials")
             password = result.get("password") or password
             ssh_link = result.get("ssh_command") or ""
 
@@ -13163,12 +13209,20 @@ def _create_vps_for_user(user, data):
         if default_days and int(default_days) > 0:
             from datetime import timedelta
             expires_at = (datetime.now() + timedelta(days=int(default_days))).strftime("%Y-%m-%d %H:%M:%S")
+        columns = ["user_id", "node_id", "container_id", "container_name", "ssh_command", "ssh_password",
+                   "os_type", "ram", "cpu", "disk", "status", "expires_at", "server_type", "max_backups"]
+        values = [user["id"], node["id"], container_id, name, ssh_link, password,
+                  os_type, ram, cpu, disk, "created", expires_at, server_type, max_backups]
+        existing_columns = {row[1] for row in conn.execute("PRAGMA table_info(vps)").fetchall()}
+        if "vps_type" in existing_columns:
+            columns.append("vps_type")
+            values.append(vps_type)
+        if "nesting" in existing_columns:
+            columns.append("nesting")
+            values.append(1 if nesting else 0)
         cur = conn.execute(
-            """INSERT INTO vps (user_id,node_id,container_id,container_name,ssh_command,ssh_password,
-               os_type,ram,cpu,disk,status,expires_at,server_type,max_backups)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-            (user["id"], node["id"], container_id, name, ssh_link, password,
-             os_type, ram, cpu, disk, "created", expires_at, server_type, max_backups)
+            "INSERT INTO vps (%s) VALUES (%s)" % (",".join(columns), ",".join("?" for _ in columns)),
+            values
         )
         conn.commit()
         vps_id = cur.lastrowid
@@ -13177,13 +13231,13 @@ def _create_vps_for_user(user, data):
             "vps_id": vps_id, "name": name, "username": "root",
             "password": password, "panel_link": panel_link,
             "os_type": os_type, "ram": ram, "cpu": cpu, "disk": disk,
-            "server_type": server_type
+            "server_type": server_type, "vps_type": vps_type, "nesting": nesting
         }
         _notify_vps_created(user, credentials)
         log_activity(user["id"], "create_vps", "vps",
                      json.dumps({"name": name, "server_type": server_type, "source": "panel/bot"}),
                      request.remote_addr)
-        add_log("info", f"{server_type.title()} VPS created: {name} for {user['username']} on node {node['name']}", "vps")
+        add_log("info", f"{server_type.title()} {vps_type} VPS created: {name} for {user['username']} on node {node['name']}", "vps")
         return credentials
     except Exception:
         conn.rollback()
@@ -13254,6 +13308,9 @@ def _provision_existing_panel_vps(user, vps_id, container_id, container_name, no
 
 
 def _admin_create_vps_with_notifications():
+    if request.method != "POST":
+        flash("VPS banane ke liye form ka Deploy VPS button dabao.", "info")
+        return redirect(url_for("admin_panel"))
     if "user_id" not in session:
         flash("Please login first", "error")
         return redirect(url_for("login"))
@@ -13291,7 +13348,9 @@ def _admin_create_vps_with_notifications():
         ):
             creds = _create_vps_for_user(user, {
                 "os_type": os_type, "ram_mb": ram_mb, "cpu": cpu_cores, "disk_gb": disk_gb,
-                "node_id": node_id, "server_type": server_type, "max_backups": max_backups
+                "node_id": node_id, "server_type": server_type, "max_backups": max_backups,
+                "vps_type": request.form.get("vps_type") or "lxc",
+                "nesting": bool(request.form.get("nesting"))
             })
         flash(
             f"{server_type.title()} VPS {creds['name']} created for {user['username']}.",

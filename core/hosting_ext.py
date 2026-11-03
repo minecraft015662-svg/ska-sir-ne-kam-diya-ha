@@ -969,10 +969,13 @@ def register_hosting_extensions(app, deps) -> None:
         return render_template("admin_vps_types.html", caps=vps_types.capabilities(),
                                users=users, nodes=nodes, vps_list=vps_list, images=IMAGE_CHOICES)
 
-    @app.route("/admin/vps-types/create", methods=["POST"])
+    @app.route("/admin/vps-types/create", methods=["GET", "POST"])
     @admin_required
     def ext_admin_create_typed_vps():
         ensure_schema()
+        if request.method != "POST":
+            flash("VPS banane ke liye form ka create button dabao.", "info")
+            return redirect(url_for("ext_admin_vps_types"))
         try:
             user_id = int(request.form.get("user_id") or 0)
             node_id = int(request.form.get("node_id") or 0)
