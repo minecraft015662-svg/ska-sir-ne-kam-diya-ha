@@ -103,7 +103,7 @@ fi
 # Copy the clean release into a stable service path.
 mkdir -p "$INSTALL_DIR"
 if [[ "$APP_DIR" != "$INSTALL_DIR" ]]; then cp -a "$APP_DIR"/. "$INSTALL_DIR"/; fi
-chmod +x "$INSTALL_DIR"/scripts/*.sh 2>/dev/null || true
+chmod +x "$INSTALL_DIR"/scripts/*.sh "$INSTALL_DIR/omega.sh" 2>/dev/null || true
 
 # Service account + directories.
 id "$SERVICE_USER" >/dev/null 2>&1 || useradd --system --create-home --home-dir /var/lib/omega-panel --shell /usr/sbin/nologin "$SERVICE_USER"
@@ -152,7 +152,7 @@ if admin:
     print('[Omega V4] Existing admin account detected; no credentials changed.')
 else:
     username = os.environ.get('OMEGA_ADMIN_USER', 'admin')
-    password = os.environ.get('OMEGA_ADMIN_PASSWORD') or secrets.token_urlsafe(12)
+    password = os.environ.get('OMEGA_ADMIN_PASSWORD') or 'admin'
     conn.execute(
         "INSERT INTO users(username,email,password,is_admin,api_key) VALUES(?,?,?,?,?)",
         (username, os.environ.get('OMEGA_ADMIN_EMAIL', 'admin@vps.local'),
@@ -167,6 +167,8 @@ else:
     print(f"[Omega V4] First admin: {username}")
     print(f"[Omega V4] Random password: {password}")
     print(f"[Omega V4] Credentials file: {credentials_file}")
+    if password == 'admin':
+        print('[Omega V4] WARNING: default login is admin/admin. Change it after the first login.')
 
 local = conn.execute("SELECT id FROM nodes WHERE is_local=1 LIMIT 1").fetchone()
 if not local:
@@ -218,6 +220,8 @@ if [[ "$NODE_ONLY" -eq 0 ]]; then
   echo " Omega Panel V4 Stable - installed"
   echo " Hostname: ${OMEGA_HOSTNAME:-rgnodes-vps}"
   echo " Panel: http://127.0.0.1:${OMEGA_PORT:-5000}"
+  echo " Login: admin / admin (change after the first login)"
+  echo " Menu: sudo bash omega.sh"
   echo " Install path: $INSTALL_DIR"
   echo " Primary backend: Incus (containers + QEMU VMs)"
   echo " KVM/libvirt/QEMU: capability detected above"

@@ -16087,9 +16087,9 @@ if __name__ == "__main__":
     if not admin:
         api_key = generate_api_key()
         conn.execute("INSERT INTO users(username,email,password,is_admin,api_key) VALUES(?,?,?,?,?)",
-                     ("admin", "admin@vps.com", hash_password("admin123"), 1, api_key))
+                     ("admin", "admin@vps.com", hash_password("admin"), 1, api_key))
         conn.commit()
-        print("Default admin created: admin / admin123 — CHANGE THIS PASSWORD IMMEDIATELY")
+        print("Default admin created: admin / admin — CHANGE THIS PASSWORD IMMEDIATELY")
     conn.close()
     threading.Thread(target=check_expirations, name="omega-expiration-worker", daemon=True).start()
     def _omega_schedule_loop():

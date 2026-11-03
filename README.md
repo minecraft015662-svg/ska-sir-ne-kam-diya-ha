@@ -25,11 +25,30 @@ A clean-source rebuild of the uploaded Omega Panel V3 Incus package. V4 keeps th
 
 ## Install
 
-Run on a supported systemd host as root:
+The fastest way is the single command menu (installs, uninstalls, connects nodes):
+
+```bash
+sudo bash omega.sh
+```
+
+```
+  1) Install panel
+  2) Uninstall panel
+  3) Node install + connect
+  4) Panel status
+  5) Update panel
+  6) Exit
+```
+
+Non-interactive: `sudo bash omega.sh --install`, `--uninstall`, `--node`, `--status`, `--update`.
+
+Direct install on a supported systemd host as root:
 
 ```bash
 sudo bash setup.sh
 ```
+
+The default first login is **admin / admin**; change it right after signing in.
 
 For LXD compatibility probing/installation too:
 
@@ -37,7 +56,7 @@ For LXD compatibility probing/installation too:
 sudo bash setup.sh --with-lxd
 ```
 
-The installer prefers the host distro Python, installs dependencies in `venv/`, creates a random first-admin password when no `OMEGA_ADMIN_PASSWORD` is supplied, and writes it to `/var/lib/omega-panel/first_admin_credentials.txt` with restrictive permissions.
+The installer prefers the host distro Python, installs dependencies in `venv/`, creates the first admin as **admin / admin** (override with `OMEGA_ADMIN_USER` / `OMEGA_ADMIN_PASSWORD`), writes it to `/var/lib/omega-panel/first_admin_credentials.txt` with restrictive permissions, and registers a local node row. Change the password immediately after the first login.
 
 ## 24/7 services
 
@@ -111,6 +130,25 @@ Developer Portal. If it is disabled the bot logs a warning, retries without the
 intent and keeps answering slash commands. Set `OMEGA_BOT_PREFIX_COMMANDS=0` to
 disable prefix commands explicitly. `discord.py` is now part of
 `requirements.txt`, so `setup.sh` installs it.
+
+### Connect a node by command
+
+Admin → **Node Install / Uninstall** shows the
+enrollment key and the exact command. On the node server run:
+
+```bash
+sudo bash scripts/omega-node-install.sh
+sudo bash scripts/omega-node-connect.sh \
+  --panel http://PANEL_IP:5000 \
+  --key ENROLLMENT_KEY \
+  --name node-2 \
+  --url http://NODE_IP:5001
+```
+
+Or run `sudo bash omega.sh` on the node and choose **3) Node install + connect**.
+The panel stores the node with `is_local=0`, its agent URL and its token, so it can
+create and manage VPS on that node immediately. Re-running the same command rotates
+the stored token.
 
 ### Node install / uninstall commands
 

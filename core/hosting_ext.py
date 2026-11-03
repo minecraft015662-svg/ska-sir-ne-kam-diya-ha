@@ -11,9 +11,12 @@ app.py calls :func:`register_hosting_extensions` once at import time.
 """
 from __future__ import annotations
 
+import hmac
 import html as html_module
 import io
 import json
+import re
+import secrets
 import subprocess
 import uuid
 from pathlib import Path
@@ -46,6 +49,7 @@ SETTINGS_COLUMNS = [
     ("background_path", "TEXT DEFAULT ''"),
     ("background_dim", "INTEGER DEFAULT 55"),
     ("nonkvm_image", "TEXT DEFAULT ''"),
+    ("node_enroll_key", "TEXT DEFAULT ''"),
 ]
 
 VPS_COLUMNS = [
@@ -307,6 +311,15 @@ sudo bash scripts/omega-node-install.sh --check
 sudo bash scripts/omega-node-uninstall.sh
 sudo bash scripts/omega-node-uninstall.sh --purge</pre>
   </div>
+</div>
+<div class="x-card">
+  <h2>Connect a node by command</h2>
+  <div class="x-row"><span>Enrollment key</span><span><code>{{ enroll_key or 'not generated yet' }}</code></span></div>
+  <div class="x-row"><span>Panel URL</span><span>{{ panel_url }}</span></div>
+  <p class="x-note">Run these on the node server (the second command connects it to this panel):</p>
+  <pre class="x-pre">sudo bash scripts/omega-node-install.sh
+sudo bash scripts/omega-node-connect.sh --panel {{ panel_url }} --key {{ enroll_key }} --name NODE-NAME --url http://NODE_IP:5001</pre>
+  <p class="x-note">Or on the node run <code>sudo bash omega.sh</code> and choose option 3 (Node install + connect).</p>
 </div>
 {% if output %}
 <div class="x-card">
@@ -766,7 +779,8 @@ def register_hosting_extensions(app, deps) -> None:
                 flash("Command could not be started.", "error")
             add_log("warning", f"Node command '{action}' executed from the admin panel", "node")
         return render_template("admin_node_tools.html", output=output, action=action,
-                               agent=_agent_status(port))
+                               agent=_agent_status(port), enroll_key=_node_enroll_key(),
+                               panel_url=_panel_url())
 
     # ----------------------------------------------------------- VPS types
     @app.route("/admin/vps-types")
@@ -923,6 +937,72 @@ def register_hosting_extensions(app, deps) -> None:
                + ("" if ok else f": {message}")), "success" if ok else "error")
         target = request.referrer or url_for("ext_admin_vps_types")
         return redirect(target)
+
+    # ------------------------------------------------------ node enrollment
+    def _node_enroll_key() -> str:
+        conn = get_db()
+        try:
+            row = conn.execute("SELECT id, node_enroll_key FROM settings LIMIT 1").fetchone()
+            if not row:
+                return ""
+            key = str(row["node_enroll_key"] or "").strip()
+            if not key:
+                key = secrets.token_hex(20)
+                conn.execute("UPDATE settings SET node_enroll_key=? WHERE id=?", (key, row["id"]))
+                conn.commit()
+            return key
+        finally:
+            conn.close()
+
+    def _panel_url() -> str:
+        configured = str(settings_dict().get("panel_public_url") or "").strip().rstrip("/")
+        return configured or request.url_root.rstrip("/")
+
+    @app.route("/api/nodes/enroll", methods=["POST"])
+    @limiter.limit("30/minute")
+    def ext_node_enroll():
+        ensure_schema()
+        body = request.get_json(silent=True) or {}
+        supplied = str(request.headers.get("X-Omega-Enroll") or body.get("enroll_key") or "").strip()
+        expected = _node_enroll_key()
+        if not expected or not hmac.compare_digest(supplied, expected):
+            return jsonify({"error": "Invalid enrollment key"}), 403
+        name = str(body.get("name") or "").strip()[:64]
+        node_url = str(body.get("node_url") or "").strip().rstrip("/")[:300]
+        token = str(body.get("token") or "").strip()[:200]
+        hostname = str(body.get("hostname") or name).strip()[:200] or name
+        if not re.fullmatch(r"[A-Za-z0-9._-]{2,64}", name):
+            return jsonify({"error": "Invalid node name"}), 400
+        if not re.match(r"^https?://", node_url):
+            return jsonify({"error": "node_url must start with http:// or https://"}), 400
+        if not token:
+            return jsonify({"error": "token is required"}), 400
+        conn = get_db()
+        try:
+            existing = conn.execute("SELECT id FROM nodes WHERE name=?", (name,)).fetchone()
+            if existing:
+                conn.execute(
+                    "UPDATE nodes SET hostname=?, node_url=?, api_key=?, status='online', is_local=0 WHERE id=?",
+                    (hostname, node_url, token, existing["id"]),
+                )
+                node_id = existing["id"]
+            else:
+                cur = conn.execute(
+                    "INSERT INTO nodes(name,hostname,node_url,api_key,status,is_local) VALUES(?,?,?,?,'online',0)",
+                    (name, hostname, node_url, token),
+                )
+                node_id = cur.lastrowid
+            conn.commit()
+        finally:
+            conn.close()
+        add_log("info", f"Node connected by command: {name} ({node_url})", "node")
+        return jsonify({"ok": True, "node_id": node_id, "name": name, "node_url": node_url})
+
+    @app.route("/api/nodes/enroll/key")
+    @admin_required
+    def ext_node_enroll_key():
+        ensure_schema()
+        return jsonify({"enroll_key": _node_enroll_key(), "panel_url": _panel_url()})
 
     # ------------------------------------------- global branding / AI widget
     @app.after_request
