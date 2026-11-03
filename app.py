@@ -545,6 +545,10 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
             <svg width="18" height="18"><use href="#icon-dashboard"/></svg>
             Dashboard
         </a>
+        <a href="/features" class="sidebar-link {{ 'active' if active_page == 'features' }}">
+            <svg width="18" height="18"><use href="#icon-server"/></svg>
+            VPS Switches
+        </a>
         <a href="/ports" class="sidebar-link {{ 'active' if active_page == 'ports' }}">
             <svg width="18" height="18"><use href="#icon-key"/></svg>
             Port Forwarding

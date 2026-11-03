@@ -167,6 +167,30 @@ sudo bash scripts/omega-node-uninstall.sh --purge
 
 The uninstaller never deletes the shared panel directory in `/opt/omega-panel`.
 
+### KVM and nesting switches
+
+Every VPS has two switches on **VPS Switches** (`/features`, also linked in the sidebar)
+and in the admin VPS Types table:
+
+* **Nesting ON/OFF** - applied immediately with `security.nesting`, so Docker and nested
+  VMs work inside the guest. No reinstall.
+* **KVM ON/OFF** - moves a VM between the KVM backend and the non-KVM (QEMU TCG) backend.
+  This reinstalls the VPS from its OS image, so the disk is wiped; the form requires the
+  **wipe + reinstall** checkbox. LXC containers are not VMs and cannot be switched.
+  The panel checks the host capability (`/dev/kvm`, QEMU) before touching the old VPS.
+
+### Using the AI assistant
+
+1. Admin -> **AI Settings**: paste the xAI Grok and/or Google Gemini key, choose the
+   provider and model, then press **Send test request**.
+2. The saved key is used everywhere: the floating **star** button at the bottom-right of
+   every panel page, `POST /ai/chat`, Discord `/ask <question>` and `!ai <question>`.
+3. The assistant receives the signed-in user's VPS list (type, status, nesting) and, for
+   admins, node status, so it can answer questions about real servers. It never sees the
+   API key.
+4. Turn it off again with the **AI assistant enabled** checkbox; keys can be replaced or
+   removed independently for each provider.
+
 ## Verification
 
 See `VERIFY.md` for the build checks. Host-level KVM, Incus daemon, storage quota behavior and guest-OS boot support must still be validated on the target server because those depend on the actual hardware, kernel and virtualization environment.

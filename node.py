@@ -383,6 +383,65 @@ def require_api_key(f):
     return decorated
 
 
+def nonkvm_state_dir(name):
+    return os.path.join(os.environ.get('OMEGA_NONKVM_DIR', '/var/lib/omega-panel/nonkvm'), name)
+
+
+def is_nonkvm(name):
+    return os.path.isfile(os.path.join(nonkvm_state_dir(name), 'state.env'))
+
+
+def nonkvm_action(name, action, extra=None, timeout=300):
+    """Run the shared QEMU TCG helper for a non-KVM instance on this node."""
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scripts', 'omega-nonkvm.sh')
+    if not os.path.isfile(script):
+        return 127, 'non-KVM helper script is missing on this node'
+    try:
+        proc = subprocess.run(['bash', script, action, '--name', name] + list(extra or []),
+                              text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                              timeout=timeout)
+        return proc.returncode, (proc.stdout or '').strip()
+    except subprocess.TimeoutExpired:
+        return 124, 'non-KVM %s timed out' % action
+    except Exception as exc:
+        return 1, str(exc)
+
+
+@app.before_request
+def nonkvm_container_api():
+    """Serve normal container API actions for software-emulated (non-KVM) VPS."""
+    parts = request.path.strip('/').split('/')
+    if len(parts) != 4 or parts[0] != 'api' or parts[1] != 'container':
+        return None
+    container_id, action = parts[2], parts[3]
+    if action not in {'start', 'stop', 'restart', 'delete', 'status', 'nesting'} or not is_nonkvm(container_id):
+        return None
+    supplied = request.headers.get('X-API-Key') or request.args.get('api_key')
+    if supplied != API_KEY:
+        return jsonify({'error': 'Unauthorized'}), 401
+    if action == 'nesting':
+        data = request.get_json(silent=True) or {}
+        enabled = str(data.get('nesting')).lower() in {'1', 'true', 'on', 'yes'}
+        code, output = nonkvm_action(container_id, 'nesting', ['--state', 'on' if enabled else 'off'])
+        if code != 0:
+            return jsonify({'error': output[-600:] or 'nesting update failed'}), 500
+        return jsonify({'status': 'ok', 'nesting': enabled})
+    if action == 'status':
+        code, output = nonkvm_action(container_id, 'status', timeout=60)
+        state = 'running' if 'OMEGA_STATUS=running' in output else 'stopped'
+        return jsonify({'status': 'ok', 'state': state, 'raw': output[-400:]})
+    if action == 'restart':
+        nonkvm_action(container_id, 'stop')
+        action = 'start'
+    code, output = nonkvm_action(container_id, action)
+    if code != 0:
+        return jsonify({'error': output[-600:] or ('%s failed' % action)}), 500
+    if action == 'delete':
+        return jsonify({'status': 'ok', 'state': 'deleted'})
+    return jsonify({'status': 'ok', 'state': 'running' if action == 'start' else 'stopped'})
+
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
