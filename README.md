@@ -137,12 +137,15 @@ Admin → **Node Install / Uninstall** shows the
 enrollment key and the exact command. On the node server run:
 
 ```bash
-sudo bash scripts/omega-node-install.sh
+sudo bash scripts/omega-node-install.sh --bind=0.0.0.0   # remote panel must reach the agent
 sudo bash scripts/omega-node-connect.sh \
   --panel http://PANEL_IP:5000 \
   --key ENROLLMENT_KEY \
   --name node-2 \
   --url http://NODE_IP:5001
+
+# allow the agent port only from the panel
+sudo ufw allow from PANEL_IP to any port 5001 proto tcp
 ```
 
 Or run `sudo bash omega.sh` on the node and choose **3) Node install + connect**.

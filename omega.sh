@@ -77,20 +77,35 @@ node_connect() {
     [[ -n "${enroll_key:-}" ]] || die "Enrollment key is required."
     read -rp "Node name [$(hostname -s 2>/dev/null || hostname)]: " node_name || true
     node_name="${node_name:-$(hostname -s 2>/dev/null || hostname)}"
-    read -rp "Node URL the panel should reach [http://127.0.0.1:${NODE_PORT}]: " node_url || true
-    node_url="${node_url:-http://127.0.0.1:${NODE_PORT}}"
+    local panel_host node_bind default_node_url chosen_bind
+    panel_host="$(printf '%s' "$panel" | sed -E 's#^https?://([^/:]+).*#\1#')"
+    if [[ "$panel_host" == "127.0.0.1" || "$panel_host" == "localhost" ]]; then
+        node_bind="127.0.0.1"
+        default_node_url="http://127.0.0.1:${NODE_PORT}"
+    else
+        node_bind="0.0.0.0"
+        default_node_url="http://$(hostname -I 2>/dev/null | awk '{print $1}'):${NODE_PORT}"
+    fi
+    read -rp "Node agent bind address [${node_bind}]: " chosen_bind || true
+    node_bind="${chosen_bind:-$node_bind}"
+    [[ "$node_bind" == "127.0.0.1" ]] && default_node_url="http://127.0.0.1:${NODE_PORT}"
+    read -rp "Node URL the panel should reach [${default_node_url}]: " node_url || true
+    node_url="${node_url:-$default_node_url}"
 
     if [[ "$(id -u)" -eq 0 ]]; then
-        say "Installing the node agent on this host ..."
-        bash "$ROOT_DIR/scripts/omega-node-install.sh"
+        say "Installing the node agent (bind ${node_bind}) ..."
+        bash "$ROOT_DIR/scripts/omega-node-install.sh" "--bind=${node_bind}"
     else
-        warn "Not root: skipping agent install. Run 'sudo bash scripts/omega-node-install.sh' first if the agent is missing."
+        warn "Not root: skipping agent install. Run 'sudo bash scripts/omega-node-install.sh --bind=${node_bind}' first if the agent is missing."
     fi
 
     say "Registering this node with the panel ..."
     bash "$ROOT_DIR/scripts/omega-node-connect.sh" \
         --panel "$panel" --key "$enroll_key" --name "$node_name" --url "$node_url"
     ok "Node '${node_name}' connected to ${panel}"
+    if [[ "$node_bind" != "127.0.0.1" ]]; then
+        warn "Port ${NODE_PORT} should only be open to the panel, e.g.: ufw allow from PANEL_IP to any port ${NODE_PORT} proto tcp"
+    fi
 }
 
 panel_status() {

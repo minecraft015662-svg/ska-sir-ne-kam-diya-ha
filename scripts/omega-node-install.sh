@@ -13,12 +13,14 @@ APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL_DIR="${OMEGA_INSTALL_DIR:-/opt/omega-panel}"
 SERVICE_USER="${OMEGA_SERVICE_USER:-omega-panel}"
 NODE_PORT="${OMEGA_NODE_PORT:-5001}"
+NODE_BIND="${OMEGA_NODE_BIND:-127.0.0.1}"
 UNIT="omega-node.service"
 MODE="install"
 
 for arg in "$@"; do
   case "$arg" in
     --check|--status) MODE="check" ;;
+    --bind=*) NODE_BIND="${arg#*=}" ;;
     --help)
       cat <<EOF
 Omega node agent installer
@@ -29,6 +31,7 @@ Usage: sudo bash scripts/omega-node-install.sh [--check]
 
 Environment:
   OMEGA_INSTALL_DIR   install path (default /opt/omega-panel)
+  --bind=ADDR       listen address (default 127.0.0.1; use 0.0.0.0 for a remote panel)
   OMEGA_NODE_PORT     agent port (default 5001)
 EOF
       exit 0 ;;
@@ -43,6 +46,9 @@ if [[ "$MODE" == "check" ]]; then
     if [[ -n "$health" ]]; then echo "NODE_HEALTH=${health}"; else echo "NODE_HEALTH=unreachable"; fi
   fi
   if [[ -s /etc/omega-panel/node-token ]]; then echo "NODE_TOKEN=present"; else echo "NODE_TOKEN=missing"; fi
+  if [[ -f "/etc/systemd/system/${UNIT}" ]]; then
+    echo "NODE_BIND=$(grep -oE -- '--bind [^ ]+' "/etc/systemd/system/${UNIT}" | awk '{print $2}' | cut -d: -f1)"
+  fi
   exit 0
 fi
 
@@ -81,6 +87,10 @@ chown root:"$SERVICE_USER" /etc/omega-panel/node-token 2>/dev/null || true
 chmod 0640 /etc/omega-panel/node-token
 
 install -m 0644 "$INSTALL_DIR/systemd/omega-node.service" "/etc/systemd/system/${UNIT}"
+# A node on another VPS must listen beyond loopback for the panel to reach it.
+if [[ "$NODE_BIND" != "127.0.0.1" ]]; then
+  sed -i -E "s#--bind [0-9.]+:[0-9]+#--bind ${NODE_BIND}:${NODE_PORT}#g" "/etc/systemd/system/${UNIT}"
+fi
 systemctl daemon-reload
 systemctl enable "$UNIT" >/dev/null 2>&1 || true
 systemctl restart "$UNIT"
@@ -98,7 +108,11 @@ chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR" >/dev/null 2>&1 || true
 echo "NODE_SERVICE=$(systemctl is-active "$UNIT" 2>/dev/null || echo unknown)"
 echo "NODE_HEALTH=${status}"
 echo "NODE_PORT=${NODE_PORT}"
+echo "NODE_BIND=${NODE_BIND}"
 echo "NODE_TOKEN_FILE=/etc/omega-panel/node-token"
+if [[ "$NODE_BIND" != "127.0.0.1" ]]; then
+  echo "NODE_FIREWALL=allow ${NODE_PORT}/tcp only from the panel IP (ufw allow from PANEL_IP to any port ${NODE_PORT} proto tcp)"
+fi
 [[ "$status" == "healthy" ]] || {
   echo "The agent did not become healthy. Inspect: journalctl -u ${UNIT} -n 50 --no-pager" >&2
   exit 1
