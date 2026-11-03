@@ -133,22 +133,51 @@ PYTHON_BIN="$(command -v python3)"
 "$INSTALL_DIR/venv/bin/python" -m pip install --upgrade pip wheel >/dev/null
 "$INSTALL_DIR/venv/bin/pip" install --no-cache-dir -r "$INSTALL_DIR/requirements.txt"
 
-# Initialize database and first admin. Credentials are random unless explicitly supplied.
+# Initialize the panel database and the first admin account. The panel resolves
+# database.db from its working directory, so this runs inside $INSTALL_DIR -
+# the same directory omega-panel.service uses.
 export PYTHONPATH="$INSTALL_DIR"
-"$INSTALL_DIR/venv/bin/python" - <<'PY'
-from app import db, bootstrap_admin
-from core.config import node_token
+( cd "$INSTALL_DIR" && "$INSTALL_DIR/venv/bin/python" - <<'PY'
+import os
+import secrets
 
-db.init_db()
-boot=bootstrap_admin()
-db.ensure_local_node(node_token())
-if boot:
-    print(f"[Omega V4] First admin: {boot[0]}")
-    print(f"[Omega V4] Random password: {boot[1]}")
-    print(f"[Omega V4] Credentials file: {boot[2]}")
+from app import init_db, migrate_nodes, get_db, hash_password, generate_api_key
+
+init_db()
+migrate_nodes()
+
+conn = get_db()
+admin = conn.execute("SELECT id FROM users WHERE is_admin=1").fetchone()
+if admin:
+    print('[Omega V4] Existing admin account detected; no credentials changed.')
 else:
-    print('[Omega V4] Existing user database detected; no credentials changed.')
+    username = os.environ.get('OMEGA_ADMIN_USER', 'admin')
+    password = os.environ.get('OMEGA_ADMIN_PASSWORD') or secrets.token_urlsafe(12)
+    conn.execute(
+        "INSERT INTO users(username,email,password,is_admin,api_key) VALUES(?,?,?,?,?)",
+        (username, os.environ.get('OMEGA_ADMIN_EMAIL', 'admin@vps.local'),
+         hash_password(password), 1, generate_api_key()),
+    )
+    conn.commit()
+    credentials_file = '/var/lib/omega-panel/first_admin_credentials.txt'
+    os.makedirs(os.path.dirname(credentials_file), exist_ok=True)
+    with open(credentials_file, 'w', encoding='utf-8') as fh:
+        fh.write(f"username: {username}\npassword: {password}\n")
+    os.chmod(credentials_file, 0o600)
+    print(f"[Omega V4] First admin: {username}")
+    print(f"[Omega V4] Random password: {password}")
+    print(f"[Omega V4] Credentials file: {credentials_file}")
+
+local = conn.execute("SELECT id FROM nodes WHERE is_local=1 LIMIT 1").fetchone()
+if not local:
+    conn.execute(
+        "INSERT INTO nodes(name,hostname,node_url,api_key,is_local,status) VALUES(?,?,?,?,1,'online')",
+        (os.environ.get('OMEGA_HOSTNAME', 'rgnodes-vps'), '127.0.0.1', '', ''),
+    )
+    conn.commit()
+conn.close()
 PY
+)
 chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR" /var/lib/omega-panel
 chown "$SERVICE_USER:$SERVICE_USER" /etc/omega-panel/secret /etc/omega-panel/node-token 2>/dev/null || true
 chmod 0640 /etc/omega-panel/secret /etc/omega-panel/node-token 2>/dev/null || true

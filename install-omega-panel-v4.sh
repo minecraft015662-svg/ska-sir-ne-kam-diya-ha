@@ -9,7 +9,7 @@
 
 set -Eeuo pipefail
 
-REPO_URL="${OMEGA_REPO_URL:-https://github.com/mrzetrixyt-525/Omega-Panel-V4.git}"
+REPO_URL="${OMEGA_REPO_URL:-https://github.com/minecraft015662-svg/ska-sir-ne-kam-diya-ha.git}"
 BRANCH="${OMEGA_BRANCH:-main}"
 SOURCE_DIR="${OMEGA_SOURCE_DIR:-/opt/omega-panel-v4-source}"
 INSTALL_DIR="${OMEGA_INSTALL_DIR:-/opt/omega-panel}"
