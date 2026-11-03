@@ -120,6 +120,19 @@ EXTRA_CSS = """
 .omega-ai-form{display:flex;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,.08)}
 .omega-ai-form textarea{flex:1;background:#070d18;border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#e2e8f0;font:12.5px inherit;padding:8px;resize:none;min-height:38px;max-height:110px}
 .omega-ai-form button{background:#1d4ed8;border:none;border-radius:10px;color:#fff;padding:0 14px;font-size:12.5px;font-weight:600;cursor:pointer}
+.x-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.x-tab{padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-muted);font-size:13px;cursor:pointer}
+.x-tab.active{background:rgba(255,255,255,.14);color:var(--text);border-color:rgba(255,255,255,.22)}
+.ai-log{min-height:260px;max-height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:6px 2px 12px}
+.ai-log .msg{font-size:13px;line-height:1.6;padding:10px 12px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere;max-width:92%}
+.ai-log .msg.user{align-self:flex-end;background:rgba(59,130,246,.16);border:1px solid rgba(59,130,246,.3);color:#dbeafe}
+.ai-log .msg.bot{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#cbd5e1}
+.ai-log .msg.hint{background:transparent;border:1px dashed var(--border);color:var(--text-dim);font-size:12px}
+.ai-form{display:flex;gap:8px;align-items:flex-end}
+.ai-form textarea{flex:1;min-height:46px;max-height:140px;resize:vertical;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font:13px inherit}
+.x-switchrow{display:flex;gap:10px;flex-wrap:wrap}
+.x-choice{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);font-size:13px;cursor:pointer}
+.x-choice input{accent-color:#22c55e}
 """
 
 
@@ -139,6 +152,19 @@ GLOBAL_CSS = """
 .omega-ai-form{display:flex;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,.08)}
 .omega-ai-form textarea{flex:1;background:#070d18;border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#e2e8f0;font:12.5px inherit;padding:8px;resize:none;min-height:38px;max-height:110px}
 .omega-ai-form button{background:#1d4ed8;border:none;border-radius:10px;color:#fff;padding:0 14px;font-size:12.5px;font-weight:600;cursor:pointer}
+.x-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.x-tab{padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-muted);font-size:13px;cursor:pointer}
+.x-tab.active{background:rgba(255,255,255,.14);color:var(--text);border-color:rgba(255,255,255,.22)}
+.ai-log{min-height:260px;max-height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:6px 2px 12px}
+.ai-log .msg{font-size:13px;line-height:1.6;padding:10px 12px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere;max-width:92%}
+.ai-log .msg.user{align-self:flex-end;background:rgba(59,130,246,.16);border:1px solid rgba(59,130,246,.3);color:#dbeafe}
+.ai-log .msg.bot{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#cbd5e1}
+.ai-log .msg.hint{background:transparent;border:1px dashed var(--border);color:var(--text-dim);font-size:12px}
+.ai-form{display:flex;gap:8px;align-items:flex-end}
+.ai-form textarea{flex:1;min-height:46px;max-height:140px;resize:vertical;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font:13px inherit}
+.x-switchrow{display:flex;gap:10px;flex-wrap:wrap}
+.x-choice{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);font-size:13px;cursor:pointer}
+.x-choice input{accent-color:#22c55e}
 """
 
 
@@ -360,12 +386,12 @@ ADMIN_VPS_TYPES_BODY = """
         <select class="x-select" name="node_id" required>
           {% for n in nodes %}<option value="{{ n['id'] }}">{{ n['name'] }}{{ ' (local)' if n['is_local'] else '' }}</option>{% endfor %}
         </select></div>
-      <div class="x-field"><label>Type</label>
-        <select class="x-select" name="vps_type">
-          <option value="lxc">LXC container</option>
-          <option value="kvm">KVM virtual machine</option>
-          <option value="nonkvm">Non-KVM VM (QEMU TCG)</option>
-        </select></div>
+      <div class="x-field"><label>VPS type (KVM / Non-KVM / LXC switch)</label>
+        <div class="x-switchrow">
+          <label class="x-choice"><input type="radio" name="vps_type" value="lxc" checked> <span>LXC container</span></label>
+          <label class="x-choice"><input type="radio" name="vps_type" value="kvm"> <span>KVM ON (VM)</span></label>
+          <label class="x-choice"><input type="radio" name="vps_type" value="nonkvm"> <span>KVM OFF (Non-KVM)</span></label>
+        </div></div>
       <div class="x-field"><label>Operating system</label>
         <select class="x-select" name="os_type">
           {% for value, label in images %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
@@ -417,33 +443,32 @@ FEATURES_BODY = """
 <div class="x-flash {{ 'success' if cat == 'success' else 'error' }}">{{ msg }}</div>{% endfor %}{% endwith %}
 <div class="x-head">
   <div><h1>VPS switches</h1>
-    <p>Nesting turant apply hota hai. KVM switch VPS ko KVM-accelerated VM aur Non-KVM (QEMU TCG) VM ke beech move karta hai - ye image se reinstall karta hai, isliye data delete ho jata hai.</p>
+    <p>KVM ON = hardware-accelerated VM, KVM OFF = Non-KVM (QEMU TCG) VM, LXC = container. Backend badalne par VPS usi OS image se reinstall hota hai, isliye data delete hota hai - "wipe + reinstall" tick karna zaroori hai. Nesting turant set hota hai (nested Docker ke liye ek restart).</p>
   </div>
   <span class="x-badge {{ 'ok' if kvm_available else 'warn' }}">{{ 'KVM available' if kvm_available else 'KVM unavailable on host' }}</span>
 </div>
 <div class="x-card">
   <h2>Your VPS</h2>
   <div class="x-tablewrap"><table class="x-table">
-    <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Status</th><th>KVM switch</th><th>Nesting switch</th></tr></thead>
+    <thead><tr><th>ID</th><th>Name</th><th>Backend</th><th>Status</th><th>Switch backend</th><th>Nesting</th></tr></thead>
     <tbody>
     {% for v in vps_list %}
       <tr>
         <td>#{{ v['id'] }}</td>
         <td>{{ v['container_name'] }}</td>
-        <td>{{ type_labels.get(v['vps_type'], v['vps_type']) }}</td>
+        <td><span class="x-badge {{ 'ok' if v['vps_type'] != 'nonkvm' else 'off' }}">{{ type_labels.get(v['vps_type'], v['vps_type']) }}</span></td>
         <td>{{ v['status'] }}</td>
         <td>
-          {% if v['vps_type'] == 'lxc' %}
-            <span class="x-badge">n/a (container)</span>
-          {% else %}
           <form method="post" action="{{ url_for('ext_vps_features', vps_id=v['id']) }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input type="hidden" name="feature" value="kvm">
-            <input type="hidden" name="enabled" value="{{ 0 if v['vps_type'] == 'kvm' else 1 }}">
-            <span class="x-badge {{ 'ok' if v['vps_type'] == 'kvm' else 'off' }}">{{ 'ON' if v['vps_type'] == 'kvm' else 'OFF' }}</span>
+            <input type="hidden" name="feature" value="backend">
+            <select class="x-select" name="target" style="max-width:200px">
+              <option value="lxc" {{ 'selected' if v['vps_type'] == 'lxc' }}>LXC container</option>
+              <option value="kvm" {{ 'selected' if v['vps_type'] == 'kvm' }}>KVM ON (VM)</option>
+              <option value="nonkvm" {{ 'selected' if v['vps_type'] == 'nonkvm' }}>KVM OFF (Non-KVM)</option>
+            </select>
             <label class="x-check"><input type="checkbox" name="confirm" value="1"> wipe + reinstall</label>
-            <button class="x-btn {{ 'x-danger' if v['vps_type'] == 'kvm' else '' }}" type="submit">{{ 'Turn KVM OFF' if v['vps_type'] == 'kvm' else 'Turn KVM ON' }}</button>
+            <button class="x-btn" type="submit">Apply</button>
           </form>
-          {% endif %}
         </td>
         <td>
           <form method="post" action="{{ url_for('ext_vps_nesting', vps_id=v['id']) }}" style="display:flex;gap:8px;align-items:center">
@@ -458,9 +483,96 @@ FEATURES_BODY = """
     {% endfor %}
     </tbody>
   </table></div>
-  <p class="x-note">KVM switch ke liye "wipe + reinstall" tick karna zaroori hai. Nesting switch turant lagta hai (VPS restart nahi hota).</p>
+  <p class="x-note">LXC se VM aur VM se LXC conversion bhi isi switch se hota hai. OS alias same rehta hai; naya disk, IP aur password milta hai.</p>
 </div>
 """
+
+
+AI_PAGE_BODY = """
+<div class="x-head">
+  <div><h1>AI chat</h1>
+    <p>Member chat aapke VPS ke baare me jawab deta hai. Admin chat poore panel, nodes aur saare VPS ka overview deta hai - dono ke apne alag chat hain.</p>
+  </div>
+  <span class="x-badge {{ 'ok' if ai_ready else 'off' }}">{{ 'AI ready' if ai_ready else 'Add an API key in AI Settings' }}</span>
+</div>
+{% if is_admin %}
+<div class="x-tabs">
+  <button class="x-tab active" type="button" data-mode="member">Member chat</button>
+  <button class="x-tab" type="button" data-mode="admin">Admin chat</button>
+</div>
+{% endif %}
+<div class="x-card">
+  <div class="ai-log" id="ai-log"></div>
+  <form class="ai-form" id="ai-form">
+    <textarea id="ai-input" placeholder="Poocho: mera VPS kaise chal raha hai? nesting on kaise karun? KVM se non-KVM me kaise le jaun?"></textarea>
+    <button class="x-btn" type="submit">Send</button>
+  </form>
+  <p class="x-note">Provider: {{ ai_provider }} · Model: {{ ai_model }} · {{ 'Admin chat sirf admins ko dikhta hai.' if is_admin else 'Aapko member chat milta hai.' }}</p>
+</div>
+<script>
+(function(){
+  var logEl=document.getElementById('ai-log'), form=document.getElementById('ai-form'),
+      input=document.getElementById('ai-input'), tabs=document.querySelectorAll('.x-tab'),
+      mode='member', history=[];
+  function endpoint(){ return mode==='admin' ? '/ai/admin/chat' : '/ai/chat'; }
+  function add(role,text){ var el=document.createElement('div'); el.className='msg '+role; el.textContent=text; logEl.appendChild(el); logEl.scrollTop=logEl.scrollHeight; return el; }
+  function reset(){ logEl.innerHTML=''; history=[]; add('hint', mode==='admin' ? 'Admin chat: poore panel, nodes, saare VPS ka summary.' : 'Member chat: aapke VPS ke baare me poocho.'); }
+  Array.prototype.forEach.call(tabs, function(tab){ tab.addEventListener('click', function(){ Array.prototype.forEach.call(tabs, function(x){ x.classList.remove('active'); }); tab.classList.add('active'); mode=tab.getAttribute('data-mode'); reset(); }); });
+  form.addEventListener('submit', function(event){
+    event.preventDefault();
+    var text=input.value.trim(); if(!text) return; input.value='';
+    add('user', text); var pending=add('bot','Soch raha hoon...');
+    fetch(endpoint(), {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({message:text, history:history.slice(-10)})})
+      .then(function(res){ return res.json().then(function(data){ return {ok:res.ok, data:data}; }); })
+      .then(function(out){
+        pending.textContent = out.data.reply || out.data.error || 'Koi jawab nahi mila.';
+        if (out.ok && out.data.reply) { history.push({role:'user',content:text}); history.push({role:'assistant',content:out.data.reply}); }
+      })
+      .catch(function(err){ pending.textContent='AI request failed: '+err; });
+  });
+  reset();
+})();
+</script>
+"""
+
+
+def _admin_context(get_db, capabilities=None) -> str:
+    conn = get_db()
+    try:
+        totals = conn.execute(
+            "SELECT COUNT(*) AS total, SUM(CASE WHEN status='running' THEN 1 ELSE 0 END) AS running FROM vps"
+        ).fetchone()
+        users = conn.execute("SELECT COUNT(*) AS n FROM users").fetchone()["n"]
+        rows = conn.execute(
+            """SELECT v.id, v.container_name, v.status, v.os_type,
+                      COALESCE(v.vps_type,'lxc') AS vps_type, COALESCE(v.nesting,0) AS nesting,
+                      u.username, n.name AS node_name
+               FROM vps v LEFT JOIN users u ON u.id=v.user_id LEFT JOIN nodes n ON n.id=v.node_id
+               ORDER BY v.id DESC LIMIT 40"""
+        ).fetchall()
+        nodes = conn.execute(
+            "SELECT name, status, COALESCE(is_local,0) AS is_local, COALESCE(node_url,'') AS node_url FROM nodes ORDER BY id"
+        ).fetchall()
+    finally:
+        conn.close()
+    caps = capabilities or {}
+    lines = [
+        "Omega hosting panel - ADMIN context.",
+        f"- users: {users}; VPS: {totals['total'] or 0}; running: {totals['running'] or 0}",
+        f"- host capabilities: incus={'yes' if caps.get('incus') else 'no'}, "
+        f"kvm={'yes' if caps.get('kvm') else 'no'}, nonkvm={'yes' if caps.get('nonkvm') else 'no'}",
+    ]
+    for node in nodes:
+        lines.append(f"- node {node['name']}: {node['status']}, local={'yes' if node['is_local'] else 'no'}, url={node['node_url'] or 'n/a'}")
+    for row in rows:
+        lines.append(
+            f"- VPS #{row['id']} {row['container_name']} owner={row['username']} type={row['vps_type']} "
+            f"status={row['status']} os={row['os_type']} nesting={'on' if row['nesting'] else 'off'} node={row['node_name']}"
+        )
+    lines.append("- Panel features: LXC/KVM/non-KVM VPS, backend + nesting switches (backend switch wipes disk), "
+                 "port forwarding (socat), Discord bot commands, AI assistant, node install/connect.")
+    return "\n".join(lines)
 
 
 def _panel_context(get_db, user_id: int, is_admin: bool) -> str:
@@ -629,6 +741,7 @@ def register_hosting_extensions(app, deps) -> None:
     templates["admin_node_tools.html"] = _page("Node commands — {{ settings['site_name'] }}", "Node Commands", "admin", ADMIN_NODE_TOOLS_BODY)
     templates["admin_vps_types.html"] = _page("VPS types — {{ settings['site_name'] }}", "VPS Types", "admin", ADMIN_VPS_TYPES_BODY)
     templates["features.html"] = _page("VPS switches — {{ settings['site_name'] }}", "VPS Switches", "features", FEATURES_BODY)
+    templates["ai_chat.html"] = _page("AI chat — {{ settings['site_name'] }}", "AI Chat", "ai_chat", AI_PAGE_BODY)
 
     # ------------------------------------------------------------------ AI
     @app.route("/admin/ai", methods=["GET", "POST"])
@@ -1014,8 +1127,8 @@ def register_hosting_extensions(app, deps) -> None:
         except (TypeError, ValueError):
             return default
 
-    def _migrate_kvm_backend(vps_row, node, target_type):
-        """Recreate a VPS on the KVM or non-KVM backend. Destructive by design."""
+    def _migrate_backend(vps_row, node, target_type):
+        """Recreate a VPS on the LXC, KVM or non-KVM backend. Destructive by design."""
         vps_types.require_supported(target_type)
         name = vps_row["container_name"]
         alias = os_image_alias(vps_row["os_type"])
@@ -1091,15 +1204,15 @@ def register_hosting_extensions(app, deps) -> None:
         if int(vps_row["user_id"]) != int(session["user_id"]) and not session.get("is_admin") and not shared:
             flash("You do not have access to this VPS.", "error")
             return redirect(url_for("ext_features"))
-        if (request.form.get("feature") or "").strip().lower() != "kvm":
+        feature = (request.form.get("feature") or "").strip().lower()
+        if feature not in {"kvm", "backend"}:
             flash("Unknown switch.", "error")
             return redirect(url_for("ext_features"))
         current = (vps_row["vps_type"] if "vps_type" in vps_row.keys() else "lxc") or "lxc"
-        if current == "lxc":
-            flash("KVM switch sirf VMs par lagta hai. LXC container ko pehle VM type me recreate karo.", "error")
-            return redirect(url_for("ext_features"))
-        enabled = str(request.form.get("enabled", "")).strip().lower() in {"1", "true", "on", "yes"}
-        target = "kvm" if enabled else "nonkvm"
+        target = (request.form.get("target") or "").strip().lower()
+        if target not in {"lxc", "kvm", "nonkvm"}:
+            enabled = str(request.form.get("enabled", "")).strip().lower() in {"1", "true", "on", "yes"}
+            target = "kvm" if enabled else "nonkvm"
         if target == current:
             flash("KVM is already " + ("ON" if enabled else "OFF") + " for this VPS.", "success")
             return redirect(url_for("ext_features"))
@@ -1107,14 +1220,56 @@ def register_hosting_extensions(app, deps) -> None:
             flash("KVM switch VPS ko image se reinstall karta hai (data delete). Pehle 'wipe + reinstall' tick karo.", "error")
             return redirect(url_for("ext_features"))
         try:
-            _migrate_kvm_backend(vps_row, node, target)
+            _migrate_backend(vps_row, node, target)
         except Exception as exc:
-            app.logger.exception("KVM switch failed for VPS %s", vps_id)
-            add_log("error", f"KVM switch failed on {vps_row['container_name']}: {exc}", "vps")
-            flash(f"KVM switch failed: {exc}", "error")
+            app.logger.exception("Backend switch failed for VPS %s", vps_id)
+            add_log("error", f"Backend switch failed on {vps_row['container_name']}: {exc}", "vps")
+            flash(f"Backend switch failed: {exc}", "error")
             return redirect(url_for("ext_features"))
-        flash(f"KVM is now {'ON' if enabled else 'OFF'} on {vps_row['container_name']}.", "success")
+        labels = {"lxc": "LXC container", "kvm": "KVM ON (VM)", "nonkvm": "KVM OFF (non-KVM)"}
+        flash(f"{vps_row['container_name']} is now a {labels[target]}. Naya IP aur password VPS page par hai.", "success")
         return redirect(url_for("ext_features"))
+
+    @app.route("/ai")
+    @login_required
+    def ext_ai_page():
+        ensure_schema()
+        config = settings_dict()
+        provider = str(config.get("ai_provider") or "gemini").strip().lower()
+        labels = {"gemini": "Google Gemini", "grok": "xAI Grok"}
+        default_model = "grok-4.7" if provider == "grok" else "gemini-2.5-flash"
+        has_key = bool(config.get("gemini_api_key") or config.get("grok_api_key"))
+        enabled = str(config.get("ai_enabled", "1")).strip().lower() not in {"0", "false", "off", "no"}
+        return render_template("ai_chat.html",
+                               ai_ready=bool(has_key and enabled),
+                               ai_model=config.get("ai_model") or default_model,
+                               ai_provider=labels.get(provider, provider),
+                               is_admin=bool(session.get("is_admin")))
+
+    @app.route("/ai/admin/chat", methods=["POST"])
+    @login_required
+    def ext_ai_admin_chat():
+        ensure_schema()
+        if not session.get("is_admin"):
+            return jsonify({"error": "Admin access required."}), 403
+        body = request.get_json(silent=True) or {}
+        message = str(body.get("message") or "").strip()
+        history = body.get("history") if isinstance(body.get("history"), list) else []
+        if not message:
+            return jsonify({"error": "Message is required."}), 400
+        if len(message) > 4000:
+            return jsonify({"error": "Message is too long (max 4000 characters)."}), 400
+        context = _admin_context(get_db, vps_types.capabilities())
+        config = settings_dict()
+        try:
+            try:
+                reply = ai.answer_with_settings(config, message, history=history, context=context)
+            except TypeError:
+                reply = ai.answer_with_settings(config, message, history=history)
+        except Exception as exc:
+            app.logger.warning("Admin AI chat failed: %s", exc)
+            return jsonify({"error": str(exc)}), 400
+        return jsonify({"reply": reply})
 
     # ------------------------------------------------------ node enrollment
     def _node_enroll_key() -> str:

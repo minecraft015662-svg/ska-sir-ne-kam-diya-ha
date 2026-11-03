@@ -549,6 +549,10 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
             <svg width="18" height="18"><use href="#icon-server"/></svg>
             VPS Switches
         </a>
+        <a href="/ai" class="sidebar-link {{ 'active' if active_page == 'ai_chat' }}">
+            <svg width="18" height="18"><use href="#icon-dashboard"/></svg>
+            AI Chat
+        </a>
         <a href="/ports" class="sidebar-link {{ 'active' if active_page == 'ports' }}">
             <svg width="18" height="18"><use href="#icon-key"/></svg>
             Port Forwarding
@@ -650,7 +654,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 
     <div class="sidebar-footer">
         <div style="margin-bottom:4px;">{{ settings.footer_text if settings else 'Powered by Omega Panel' }}</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;">Created by <strong>FLOATIX</strong></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;">Created by <strong>FLOATIX</strong> · Credit: <strong>sartahk34</strong> · <strong>SKa</strong></div>
         <a href="/logout" style="color:var(--text-dim);text-decoration:none;font-size:11px;display:flex;align-items:center;gap:4px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Sign out
@@ -984,7 +988,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
         </div>
 
         <div class="footer-bar">
-            <span>{{ settings.footer_text if settings else 'Omega Panel' }} &mdash; Created by <strong>FLOATIX</strong></span>
+            <span>{{ settings.footer_text if settings else 'Omega Panel' }} &mdash; Created by <strong>FLOATIX</strong> · Credit: <strong>sartahk34</strong> · <strong>SKa</strong></span>
             <span style="display: flex; gap: 16px;">
                 <a href="/login" style="color: var(--text-dim); text-decoration: none;">Login</a>
                 <a href="/register" style="color: var(--text-dim); text-decoration: none;">Register</a>
@@ -1245,7 +1249,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
             <div class="auth-footer">
                 Don't have an account? <a href="/register">Create one</a>
             </div>
-            <div style="text-align:center;font-size:10px;color:var(--text-dim);margin-top:12px;">Created by <strong>FLOATIX</strong></div>
+            <div style="text-align:center;font-size:10px;color:var(--text-dim);margin-top:12px;">Created by <strong>FLOATIX</strong> · Credit: <strong>sartahk34</strong> · <strong>SKa</strong></div>
         </div>
     </div>
 
@@ -1526,7 +1530,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
             <div class="auth-footer">
                 Already have an account? <a href="/login">Sign in</a>
             </div>
-            <div style="text-align:center;font-size:10px;color:var(--text-dim);margin-top:12px;">Created by <strong>FLOATIX</strong></div>
+            <div style="text-align:center;font-size:10px;color:var(--text-dim);margin-top:12px;">Created by <strong>FLOATIX</strong> · Credit: <strong>sartahk34</strong> · <strong>SKa</strong></div>
         </div>
     </div>
 
@@ -14248,7 +14252,7 @@ def _os_image_alias(os_type):
 for _template_name, _template_source in list(EMBEDDED_TEMPLATES.items()):
     if isinstance(_template_source, str):
         EMBEDDED_TEMPLATES[_template_name] = (_template_source
-            .replace("Created by <strong>FLOATIX</strong>", "Created by <strong>FLOATIX</strong>")
+            .replace("Created by <strong>FLOATIX</strong> · Credit: <strong>sartahk34</strong> · <strong>SKa</strong>", "Created by <strong>FLOATIX</strong> · Credit: <strong>sartahk34</strong> · <strong>SKa</strong>")
             .replace("Created by FLOATIX", "Created by FLOATIX"))
 
 # Expose integrations from the existing admin Settings page.
@@ -14821,7 +14825,7 @@ OMEGA_HEALTH_PAGE_HTML = r'''<!doctype html>
 </div></section>
 <section class="glass section"><div class="section-head"><h2>Recent health checks</h2><span class="pill">Latest 100 records</span></div><div class="table-wrap"><table><thead><tr><th>Timestamp</th><th>Component</th><th>Status</th><th>Latency</th><th>Details</th></tr></thead><tbody>
 {% for r in rows %}<tr><td>{{ r.checked_at }}</td><td>{{ r.node_name }}</td><td class="{{ 'online' if r.status == 'online' else 'offline' }}"><span class="dot"></span>{{ r.status|upper }}</td><td>{{ '%.0f ms'|format(r.latency_ms) if r.latency_ms is not none else '—' }}</td><td class="muted">{{ r.details }}</td></tr>{% else %}<tr><td colspan="5" class="muted">No health checks recorded yet. The monitor will populate this table after its first run.</td></tr>{% endfor %}
-</tbody></table></div></section><footer class="foot">Omega Panel · Created by FLOATIX</footer></main><script>setTimeout(()=>location.reload(),30000);</script></body></html>'''
+</tbody></table></div></section><footer class="foot">Omega Panel · Credit: sartahk34 · SKa</footer></main><script>setTimeout(()=>location.reload(),30000);</script></body></html>'''
 
 
 def _omega_format_uptime(seconds):

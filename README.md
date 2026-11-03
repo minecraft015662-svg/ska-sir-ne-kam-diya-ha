@@ -1,4 +1,6 @@
-# Omega Panel V4 Stable latest
+# Omega Panel
+
+> Credit: **sartahk34** · **SKa** V4 Stable latest
 
 **Primary author:** MrZetrix  
 **Original project/reference credit:** NafiGamer — `nafigamer0`
@@ -23,6 +25,17 @@ A clean-source rebuild of the uploaded Omega Panel V3 Incus package. V4 keeps th
 - RGNODES™ SSHX bridge helper
 - Optional Pterodactyl Panel installation helper for Debian/Ubuntu guests
 
+## One line install (no clone)
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/minecraft015662-svg/ska-sir-ne-kam-diya-ha/main/omega.sh)
+```
+
+The script downloads the repository into a temporary directory and shows the same menu;
+nothing stays on the machine except what `setup.sh` installs. From a checkout use
+`sudo bash omega.sh`. The menu clears the screen on every loop and after each action, so
+old output never mixes with the next menu.
+
 ## Install
 
 The fastest way is the single command menu (installs, uninstalls, connects nodes):
@@ -35,12 +48,13 @@ sudo bash omega.sh
   1) Install panel
   2) Uninstall panel
   3) Node install + connect
-  4) Panel status
-  5) Update panel
-  6) Exit
+  4) Port forwarding
+  5) Panel status
+  6) Update panel
+  7) Exit
 ```
 
-Non-interactive: `sudo bash omega.sh --install`, `--uninstall`, `--node`, `--status`, `--update`.
+Non-interactive: `sudo bash omega.sh --install`, `--uninstall`, `--node`, `--status`, `--update`, `--port-forward`.
 
 Direct install on a supported systemd host as root:
 
@@ -190,6 +204,34 @@ and in the admin VPS Types table:
    API key.
 4. Turn it off again with the **AI assistant enabled** checkbox; keys can be replaced or
    removed independently for each provider.
+
+### Port forwarding
+
+```bash
+sudo bash scripts/omega-portforward.sh add --listen 8080 --to 10.0.0.5:80
+sudo bash scripts/omega-portforward.sh list
+sudo bash scripts/omega-portforward.sh remove --listen 8080
+```
+
+Each forward runs as `omega-forward-<port>.service` (socat), restarts automatically and
+survives reboots. The same three actions are in the menu under **Port forwarding**.
+
+### AI chats: member and admin
+
+`/ai` is the AI chat page (sidebar: **AI Chat**). Members get the **Member chat**, which
+only sees their own VPS. Admins get a second **Admin chat** tab that sees every VPS, node
+status, user count and host capabilities, so it can answer fleet-level questions. Both use
+the key saved in Admin -> AI Settings, and each tab keeps its own conversation. The
+floating star widget stays a quick member chat.
+
+### Converting an existing VPS
+
+Open **VPS Switches** and pick a different backend for any VPS: `LXC container`,
+`KVM ON (VM)` or `KVM OFF (Non-KVM)`. The switch is destructive by design - the VPS is
+recreated from the same OS image, so the old disk is wiped and the **wipe + reinstall**
+checkbox is mandatory. Nesting is a non-destructive ON/OFF switch. The same three backend
+choices are available as radio switches on the create form, so a VPS can be born as LXC,
+KVM or non-KVM.
 
 ## Verification
 
