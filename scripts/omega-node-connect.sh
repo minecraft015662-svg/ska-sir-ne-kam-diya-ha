@@ -76,7 +76,7 @@ print(json.dumps({
 PY
 )"
 
-CURL_ARGS=(-sS --max-time 25 -X POST "${PANEL}/api/nodes/enroll"
+CURL_ARGS=(-sS -f --max-time 25 -X POST "${PANEL}/api/nodes/enroll"
            -H "Content-Type: application/json" -H "X-Omega-Enroll: ${KEY}"
            --data "${PAYLOAD}")
 if [[ "$INSECURE" -eq 1 ]]; then
