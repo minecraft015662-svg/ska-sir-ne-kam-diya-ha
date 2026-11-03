@@ -1,0 +1,10 @@
+[Unit]
+Description=Omega Incus image refresh check
+After=incus.service
+
+[Service]
+Type=oneshot
+User=omega-panel
+Group=omega-panel
+WorkingDirectory=/opt/omega-panel
+ExecStart=/opt/omega-panel/scripts/omega-image-refresh.sh

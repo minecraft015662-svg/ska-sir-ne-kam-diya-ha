@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Omega VPS reconciliation every minute
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=60s
+Persistent=true
+Unit=omega-watchdog.service
+
+[Install]
+WantedBy=timers.target

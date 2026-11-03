@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Omega Incus image refresh check every 6 hours
+
+[Timer]
+OnBootSec=2m
+OnUnitActiveSec=6h
+Persistent=true
+Unit=omega-image-refresh.service
+
+[Install]
+WantedBy=timers.target

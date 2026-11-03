@@ -1,0 +1,12 @@
+[Unit]
+Description=Omega Panel VPS reconciliation watchdog
+After=omega-panel.service omega-node.service
+
+[Service]
+Type=oneshot
+User=omega-panel
+Group=omega-panel
+WorkingDirectory=/opt/omega-panel
+Environment=PYTHONPATH=/opt/omega-panel
+EnvironmentFile=-/etc/omega-panel/omega.env
+ExecStart=/opt/omega-panel/scripts/omega-watchdog.sh

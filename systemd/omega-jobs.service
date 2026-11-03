@@ -1,0 +1,22 @@
+[Unit]
+Description=Omega Panel V4 Stable provisioning worker
+After=network-online.target incus.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=omega-panel
+Group=omega-panel
+WorkingDirectory=/opt/omega-panel
+Environment=PYTHONPATH=/opt/omega-panel
+EnvironmentFile=-/etc/omega-panel/omega.env
+ExecStart=/opt/omega-panel/venv/bin/python /opt/omega-panel/job_runner.py
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/omega-panel /etc/omega-panel
+
+[Install]
+WantedBy=multi-user.target
