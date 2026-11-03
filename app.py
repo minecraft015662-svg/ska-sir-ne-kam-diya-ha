@@ -13332,6 +13332,8 @@ def _admin_create_vps_with_notifications():
         max_backups = int(request.form.get("max_backups") or 0)
         server_type = (request.form.get("server_type") or "shared").strip().lower()
         os_type = (request.form.get("os_type") or "").strip()
+        vps_type = (request.form.get("vps_type") or "lxc").strip().lower()
+        nesting = bool(request.form.get("nesting"))
         if server_type not in ("shared", "dedicated"):
             raise ValueError("Select Shared or Dedicated server type.")
         conn = get_db()
@@ -13349,8 +13351,8 @@ def _admin_create_vps_with_notifications():
             creds = _create_vps_for_user(user, {
                 "os_type": os_type, "ram_mb": ram_mb, "cpu": cpu_cores, "disk_gb": disk_gb,
                 "node_id": node_id, "server_type": server_type, "max_backups": max_backups,
-                "vps_type": request.form.get("vps_type") or "lxc",
-                "nesting": bool(request.form.get("nesting"))
+                "vps_type": vps_type,
+                "nesting": nesting
             })
         flash(
             f"{server_type.title()} VPS {creds['name']} created for {user['username']}.",
