@@ -625,6 +625,22 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
             <svg width="18" height="18"><use href="#icon-settings"/></svg>
             Bot Settings
         </a>
+        <a href="/admin/ai" class="sidebar-link {{ 'active' if active_page == 'ai' }}">
+            <svg width="18" height="18"><use href="#icon-cpu"/></svg>
+            AI Settings
+        </a>
+        <a href="/admin/branding" class="sidebar-link {{ 'active' if active_page == 'branding' }}">
+            <svg width="18" height="18"><use href="#icon-edit"/></svg>
+            Branding &amp; Background
+        </a>
+        <a href="/admin/vps-types" class="sidebar-link {{ 'active' if active_page == 'vpstypes' }}">
+            <svg width="18" height="18"><use href="#icon-server"/></svg>
+            VPS Types (LXC/KVM)
+        </a>
+        <a href="/admin/node-tools" class="sidebar-link {{ 'active' if active_page == 'nodetools' }}">
+            <svg width="18" height="18"><use href="#icon-terminal"/></svg>
+            Node Install / Uninstall
+        </a>
     </div>
     {% endif %}
 
@@ -15270,8 +15286,14 @@ def _omega_bot_ensure_sshx(vps_id):
         conn.close()
     return ssh_command
 
+# Prefix commands ("!vps", "!ai", ...) need Discord's privileged Message Content
+# intent. When the portal has it disabled discord.py refuses to connect, so the
+# supervisor retries once with the intent off and slash commands keep working.
+OMEGA_BOT_PREFIX_ENABLED = os.getenv("OMEGA_BOT_PREFIX_COMMANDS", "1").strip().lower() not in {"0", "false", "no", "off"}
+
+
 async def _omega_bot_start_async(token):
-    """Admin-only Discord live node status bot. No prefix commands or user VPS commands."""
+    """Discord bot: live node status (admins) plus VPS, nesting and AI commands."""
     import asyncio
     import re
     import discord
@@ -15279,7 +15301,7 @@ async def _omega_bot_start_async(token):
     from discord.ext import tasks
 
     intents = discord.Intents.default()
-    intents.message_content = False
+    intents.message_content = bool(OMEGA_BOT_PREFIX_ENABLED)
     intents.members = False
     client = discord.Client(intents=intents)
     tree = app_commands.CommandTree(client)
@@ -15583,6 +15605,222 @@ async def _omega_bot_start_async(token):
             else:
                 await interaction.response.send_message(message, ephemeral=True)
 
+    def _vps_type_of(row):
+        try:
+            return str(row["vps_type"] or "lxc")
+        except Exception:
+            return "lxc"
+
+    def _nesting_of(row):
+        try:
+            return bool(row["nesting"])
+        except Exception:
+            return False
+
+    def _format_vps_lines(rows):
+        lines = []
+        for row in list(rows)[:20]:
+            lines.append(
+                f"`#{row['id']}` **{row['container_name']}** · {_vps_type_of(row)} · "
+                f"{row['status']} · nesting {'ON' if _nesting_of(row) else 'OFF'}"
+            )
+        return "\n".join(lines) or "No VPS found. An administrator can create one in the panel."
+
+    def _instance_action_sync(vps_id, discord_id, action):
+        user, vps, allowed = _omega_bot_vps_access(int(vps_id), str(discord_id))
+        if not allowed:
+            raise PermissionError("You do not own or have access to this VPS.")
+        if "suspended" in vps.keys() and int(vps["suspended"] or 0):
+            raise PermissionError("This VPS is suspended. Contact the panel administrator.")
+        if _vps_type_of(vps) == "nonkvm":
+            from core import vps_types as _vps_types
+            ok, message = _vps_types.action(vps["container_name"], "nonkvm", action)
+            if not ok:
+                raise RuntimeError(message or "Action failed")
+            state = "running" if action in ("start", "restart") else "stopped"
+            conn = get_db()
+            try:
+                conn.execute("UPDATE vps SET status=? WHERE id=?", (state, int(vps_id)))
+                conn.commit()
+            finally:
+                conn.close()
+            return state
+        return _omega_bot_action(int(vps_id), str(discord_id), action)
+
+    def _nesting_sync(vps_id, discord_id, enabled):
+        from core import vps_types as _vps_types
+        user, vps, allowed = _omega_bot_vps_access(int(vps_id), str(discord_id))
+        if not allowed:
+            raise PermissionError("You do not own or have access to this VPS.")
+        vps_row, node = get_node_for_vps(int(vps_id))
+        if not vps_row:
+            raise RuntimeError("VPS not found")
+        vps_type = _vps_type_of(vps_row)
+        container_id = vps_row["container_id"] or vps_row["container_name"]
+        if node and not node["is_local"]:
+            response, code = call_node_api(node["node_url"], node["api_key"],
+                                           f"/api/container/{container_id}/nesting",
+                                           method="POST", data={"nesting": bool(enabled)}, timeout=120)
+            ok = code in (200, 201) and isinstance(response, dict) and not response.get("error")
+            message = response.get("error", "") if isinstance(response, dict) else ""
+        else:
+            ok, message = _vps_types.set_nesting(container_id, vps_type, bool(enabled))
+        if not ok:
+            raise RuntimeError(message or "Could not change nesting")
+        conn = get_db()
+        try:
+            conn.execute("UPDATE vps SET nesting=? WHERE id=?", (1 if enabled else 0, int(vps_id)))
+            conn.commit()
+        finally:
+            conn.close()
+        return bool(enabled)
+
+    def _ai_sync(prompt, discord_id=None, is_admin=False):
+        from core import ai as _ai
+        settings = dict(_omega_settings_dict())
+        context = ""
+        try:
+            if discord_id:
+                user = _omega_bot_linked_user(str(discord_id))
+                if user:
+                    from core.hosting_ext import _panel_context
+                    context = _panel_context(get_db, int(user["id"]), bool(is_admin or user["is_admin"]))
+        except Exception:
+            context = ""
+        return _ai.answer_with_settings(settings, prompt, context=context)
+
+    @tree.command(name="vps", description="List your VPS with type, status and nesting")
+    async def vps_list_command(interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        try:
+            user = await asyncio.to_thread(_omega_bot_linked_user, str(interaction.user.id))
+            if not user:
+                return await interaction.followup.send(
+                    "Link Discord first: sign in to the panel with Discord, then open Profile.", ephemeral=True)
+            rows = await asyncio.to_thread(_omega_bot_user_vps, int(user["id"]))
+            await interaction.followup.send(_format_vps_lines(rows)[:1900], ephemeral=True)
+        except Exception as exc:
+            app.logger.exception("Discord /vps failed")
+            await interaction.followup.send(f"Could not list VPS: `{str(exc)[:250]}`", ephemeral=True)
+
+    @tree.command(name="vps_action", description="Start, stop or restart one of your VPS")
+    @app_commands.describe(vps_id="VPS number shown by /vps", action="Action to perform")
+    @app_commands.choices(action=[
+        app_commands.Choice(name="Start", value="start"),
+        app_commands.Choice(name="Stop", value="stop"),
+        app_commands.Choice(name="Restart", value="restart"),
+    ])
+    async def vps_action_command(interaction: discord.Interaction, vps_id: int,
+                                 action: app_commands.Choice[str]):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        try:
+            state = await asyncio.to_thread(_instance_action_sync, vps_id,
+                                            str(interaction.user.id), action.value)
+            await interaction.followup.send(f"VPS `#{vps_id}` is now **{state}**.", ephemeral=True)
+        except Exception as exc:
+            app.logger.exception("Discord /vps_action failed")
+            await interaction.followup.send(f"Action failed: `{str(exc)[:300]}`", ephemeral=True)
+
+    @tree.command(name="nesting", description="Turn nesting (Docker / nested VMs) on or off for your VPS")
+    @app_commands.describe(vps_id="VPS number shown by /vps", state="ON or OFF")
+    @app_commands.choices(state=[
+        app_commands.Choice(name="ON", value="on"),
+        app_commands.Choice(name="OFF", value="off"),
+    ])
+    async def nesting_command(interaction: discord.Interaction, vps_id: int,
+                              state: app_commands.Choice[str]):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        try:
+            enabled = state.value == "on"
+            await asyncio.to_thread(_nesting_sync, vps_id, str(interaction.user.id), enabled)
+            await interaction.followup.send(
+                f"Nesting is now **{'ON' if enabled else 'OFF'}** on VPS `#{vps_id}`.", ephemeral=True)
+        except Exception as exc:
+            app.logger.exception("Discord /nesting failed")
+            await interaction.followup.send(f"Could not change nesting: `{str(exc)[:300]}`", ephemeral=True)
+
+    @tree.command(name="ask", description="Ask the panel AI assistant (admin-configured Grok/Gemini key)")
+    @app_commands.describe(question="What do you want to know or do?")
+    async def ask_command(interaction: discord.Interaction, question: str):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        try:
+            user = await asyncio.to_thread(_omega_bot_linked_user, str(interaction.user.id))
+            answer = await asyncio.to_thread(_ai_sync, question, str(interaction.user.id),
+                                             bool(user and user["is_admin"]))
+            await interaction.followup.send(str(answer.get("reply") or "No answer.")[:1900], ephemeral=True)
+        except Exception as exc:
+            app.logger.exception("Discord /ask failed")
+            await interaction.followup.send(f"AI error: `{str(exc)[:300]}`", ephemeral=True)
+
+    @client.event
+    async def on_message(message):
+        """Prefix commands (!vps, !start, !stop, !restart, !nesting, !ai, !ping, !help)."""
+        if not OMEGA_BOT_PREFIX_ENABLED or message.author.bot or not message.guild:
+            return
+        try:
+            prefix = str(_omega_settings_dict().get("bot_prefix") or "!").strip() or "!"
+        except Exception:
+            prefix = "!"
+        if not message.content.startswith(prefix):
+            return
+        parts = message.content[len(prefix):].strip().split()
+        if not parts:
+            return
+        command, args = parts[0].lower(), parts[1:]
+
+        async def reply(text):
+            try:
+                await message.reply(str(text)[:1900], mention_author=False)
+            except Exception:
+                app.logger.exception("Could not send Discord prefix reply")
+
+        try:
+            if command in ("help", "commands"):
+                await reply(
+                    "**Panel commands**\n"
+                    f"`{prefix}vps` - list your VPS\n"
+                    f"`{prefix}start <id>` - start a VPS\n"
+                    f"`{prefix}stop <id>` - stop a VPS\n"
+                    f"`{prefix}restart <id>` - restart a VPS\n"
+                    f"`{prefix}nesting <id> on|off` - nesting toggle\n"
+                    f"`{prefix}ai <question>` - ask the AI assistant\n"
+                    f"`{prefix}ping` - bot latency"
+                )
+            elif command == "ping":
+                await reply(f"Pong - {round(client.latency * 1000)} ms")
+            elif command == "vps":
+                user = await asyncio.to_thread(_omega_bot_linked_user, str(message.author.id))
+                if not user:
+                    return await reply("Link Discord in the panel profile first.")
+                rows = await asyncio.to_thread(_omega_bot_user_vps, int(user["id"]))
+                await reply(_format_vps_lines(rows))
+            elif command in ("start", "stop", "restart", "boot", "shutdown"):
+                if not args or not args[0].isdigit():
+                    return await reply(f"Usage: `{prefix}{command} <vps id>` (see `{prefix}vps`)")
+                action = {"boot": "start", "shutdown": "stop"}.get(command, command)
+                state = await asyncio.to_thread(_instance_action_sync, int(args[0]),
+                                                str(message.author.id), action)
+                await reply(f"VPS `#{args[0]}` is now **{state}**.")
+            elif command == "nesting":
+                if len(args) < 2 or not args[0].isdigit() or args[1].lower() not in {"on", "off", "true", "false", "1", "0"}:
+                    return await reply(f"Usage: `{prefix}nesting <vps id> on|off`")
+                enabled = args[1].lower() in {"on", "true", "1"}
+                await asyncio.to_thread(_nesting_sync, int(args[0]), str(message.author.id), enabled)
+                await reply(f"Nesting is now **{'ON' if enabled else 'OFF'}** on VPS `#{args[0]}`.")
+            elif command in ("ai", "ask"):
+                question = message.content[len(prefix) + len(command):].strip()
+                if not question:
+                    return await reply(f"Usage: `{prefix}ai <question>`")
+                user = await asyncio.to_thread(_omega_bot_linked_user, str(message.author.id))
+                answer = await asyncio.to_thread(_ai_sync, question, str(message.author.id),
+                                                 bool(user and user["is_admin"]))
+                await reply(answer.get("reply") or "No answer.")
+        except PermissionError as exc:
+            await reply(f"Not allowed: {exc}")
+        except Exception as exc:
+            app.logger.exception("Discord prefix command failed: %s", command)
+            await reply(f"Command failed: `{str(exc)[:300]}`")
+
     @tree.command(name="uptime", description="Create a live node status message in a channel")
     @app_commands.describe(
         channel="Text channel where the live status should appear",
@@ -15743,7 +15981,7 @@ async def _omega_bot_start_async(token):
 
 def omega_discord_bot_thread():
     """Run Discord in a dedicated daemon thread with a fresh asyncio loop per session."""
-    global OMEGA_BOT_LOOP
+    global OMEGA_BOT_LOOP, OMEGA_BOT_PREFIX_ENABLED
     try:
         import discord  # noqa: F401
         import asyncio
@@ -15769,8 +16007,22 @@ def omega_discord_bot_thread():
         try:
             asyncio.set_event_loop(loop)
             loop.run_until_complete(_omega_bot_start_async(token))
-        except Exception:
-            app.logger.exception("Discord bot session ended; supervisor will retry")
+        except Exception as exc:
+            privileged = False
+            try:
+                import discord as _discord_mod
+                privileged = isinstance(exc, _discord_mod.PrivilegedIntentsRequired)
+            except Exception:
+                privileged = False
+            if privileged and OMEGA_BOT_PREFIX_ENABLED:
+                OMEGA_BOT_PREFIX_ENABLED = False
+                app.logger.warning(
+                    "Discord Message Content intent is disabled, so prefix commands are off. "
+                    "Enable it in the Discord Developer Portal (Bot -> Message Content Intent), "
+                    "or set OMEGA_BOT_PREFIX_COMMANDS=0. Slash commands keep working."
+                )
+            else:
+                app.logger.exception("Discord bot session ended; supervisor will retry")
         finally:
             try:
                 pending = asyncio.all_tasks(loop)
@@ -15795,6 +16047,33 @@ def omega_discord_bot_thread():
 
         if not OMEGA_HEALTH_STOP.is_set():
             OMEGA_HEALTH_STOP.wait(8)
+
+
+# ---------------------------------------------------------------------------
+# Hosting extension pack: AI keys/assistant (Grok + Gemini), background image
+# upload, LXC/KVM/non-KVM VPS types with nesting, and node install/uninstall
+# commands. Registered last so every helper above is available.
+# ---------------------------------------------------------------------------
+try:
+    from core.hosting_ext import register_hosting_extensions as _register_hosting_extensions
+    _register_hosting_extensions(app, {
+        "get_db": get_db,
+        "get_settings": get_settings,
+        "init_db": init_db,
+        "login_required": login_required,
+        "admin_required": admin_required,
+        "limiter": limiter,
+        "get_rate_limit": get_rate_limit,
+        "add_log": add_log,
+        "log_activity": log_activity,
+        "EMBEDDED_TEMPLATES": EMBEDDED_TEMPLATES,
+        "call_node_api": call_node_api,
+        "get_node_for_vps": get_node_for_vps,
+        "os_image_alias": _os_image_alias,
+        "generate_container_name": generate_container_name,
+    })
+except Exception:
+    app.logger.exception("Hosting extension pack failed to register")
 
 
 if __name__ == "__main__":

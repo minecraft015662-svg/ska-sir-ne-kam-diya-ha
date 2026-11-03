@@ -44,7 +44,8 @@ install_dnf() { dnf -y makecache; dnf -y install "$@"; }
 if command -v apt-get >/dev/null 2>&1; then
   if [[ "${ID:-}" == "ubuntu" ]]; then install_apt software-properties-common; add-apt-repository -y universe >/dev/null 2>&1 || true; fi
   install_apt ca-certificates curl wget git jq python3 python3-venv python3-pip sudo openssl \
-    cpu-checker qemu-kvm qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients \
+    cpu-checker qemu-kvm qemu-system-x86 qemu-utils cloud-image-utils \
+    libvirt-daemon-system libvirt-clients \
     bridge-utils virtinst virt-manager
   systemctl enable --now libvirtd 2>/dev/null || systemctl enable --now virtqemud 2>/dev/null || true
 elif command -v dnf >/dev/null 2>&1; then
@@ -102,6 +103,7 @@ fi
 # Copy the clean release into a stable service path.
 mkdir -p "$INSTALL_DIR"
 if [[ "$APP_DIR" != "$INSTALL_DIR" ]]; then cp -a "$APP_DIR"/. "$INSTALL_DIR"/; fi
+chmod +x "$INSTALL_DIR"/scripts/*.sh 2>/dev/null || true
 
 # Service account + directories.
 id "$SERVICE_USER" >/dev/null 2>&1 || useradd --system --create-home --home-dir /var/lib/omega-panel --shell /usr/sbin/nologin "$SERVICE_USER"

@@ -500,26 +500,71 @@ def create_container():
     ram = data.get('ram')
     cpu = data.get('cpu')
     disk = data.get('disk', '10GB')
+    vps_type = str(data.get('vps_type') or 'lxc').strip().lower()
+    nesting = str(data.get('nesting', False)).strip().lower() in ('1', 'true', 'on', 'yes')
+    if vps_type in ('vm', 'virtual-machine', 'virtualmachine', 'qemu'):
+        vps_type = 'kvm'
+    if vps_type not in ('lxc', 'kvm', 'nonkvm'):
+        return jsonify({'error': 'Unsupported vps_type (lxc, kvm or nonkvm)'}), 400
 
     if not name:
         return jsonify({'error': 'Name is required'}), 400
+
+    if vps_type == 'kvm' and not os.path.exists('/dev/kvm'):
+        return jsonify({'error': 'KVM is not available on this node (/dev/kvm missing)'}), 400
+
+    if vps_type == 'nonkvm':
+        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scripts', 'omega-nonkvm.sh')
+        if not os.path.isfile(script):
+            return jsonify({'error': 'Non-KVM helper script is missing on this node'}), 500
+        try:
+            ram_mb = max(256, parse_ram_to_bytes(ram) // (1024 * 1024)) if ram else 2048
+        except Exception:
+            ram_mb = 2048
+        try:
+            disk_gb = str(int(float(str(disk).replace('GB', '').replace('gb', '').strip())))
+        except Exception:
+            disk_gb = '20'
+        proc = subprocess.run(
+            ['bash', script, 'create', '--name', name, '--alias', str(image),
+             '--cpu', str(parse_cpu_count(cpu) if cpu else 2), '--ram-mb', str(ram_mb),
+             '--disk-gb', disk_gb, '--nesting', 'on' if nesting else 'off'],
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=1200
+        )
+        output = proc.stdout or ''
+        if proc.returncode != 0:
+            return jsonify({'error': output[-900:] or 'Non-KVM creation failed'}), 500
+        info = {}
+        for line in output.splitlines():
+            if '=' in line:
+                key, _, value = line.partition('=')
+                info[key.strip()] = value.strip()
+        return jsonify({'status': 'ok', 'container_id': name, 'name': name,
+                        'vps_type': 'nonkvm', 'nesting': nesting,
+                        'ssh_port': info.get('OMEGA_SSH_PORT', ''),
+                        'ssh_password': info.get('OMEGA_SSH_PASSWORD', '')})
 
     try:
         # Remove any stale instance with the same name
         _lxd_request('DELETE', f'/1.0/instances/{name}?force=1')
 
         disk_str = disk.strip().upper()
+        instance_config = {
+            'user.user-data': CLOUD_INIT,
+            'security.nesting': 'true' if nesting else 'false',
+        }
+        if vps_type == 'lxc':
+            instance_config['security.privileged'] = 'true'
         body = {
             'name': name,
             'source': {'type': 'image', 'alias': image},
-            'config': {
-                'user.user-data': CLOUD_INIT,
-                'security.privileged': 'true',
-            },
+            'config': instance_config,
             'devices': {
                 'root': {'type': 'disk', 'path': '/', 'pool': 'default', 'size': disk_str},
             },
         }
+        if vps_type == 'kvm':
+            body['type'] = 'virtual-machine'
         if ram:
             body['config']['limits.memory'] = str(parse_ram_to_bytes(ram))
         if cpu:
@@ -545,6 +590,21 @@ def create_container():
         return jsonify({'status': 'ok', 'container_id': name, 'name': name})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/container/<container_id>/nesting', methods=['POST'])
+@require_api_key
+def set_container_nesting(container_id):
+    data = request.get_json(silent=True) or {}
+    if 'nesting' not in data:
+        return jsonify({'error': 'nesting (true/false) is required'}), 400
+    enabled = str(data.get('nesting')).strip().lower() in ('1', 'true', 'on', 'yes')
+    code, resp = _lxd_request('PATCH', f'/1.0/instances/{container_id}', data={
+        'config': {'security.nesting': 'true' if enabled else 'false'}})
+    if code not in (200, 201, 202):
+        message = resp.get('error', resp) if isinstance(resp, dict) else resp
+        return jsonify({'error': f'Failed to update nesting: {message}'}), 500
+    return jsonify({'status': 'ok', 'nesting': enabled})
 
 
 @app.route('/api/container/<container_id>/start', methods=['POST'])

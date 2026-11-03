@@ -4,3 +4,5 @@ psutil>=6,<7
 gunicorn>=23,<24
 tzdata>=2024
 requests>=2.32,<3
+discord.py>=2.3,<3
+python-dotenv>=1.0,<2

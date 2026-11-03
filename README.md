@@ -59,6 +59,73 @@ Admin users can open a ready Debian/Ubuntu VPS and start the Pterodactyl helper 
 
 The original V3 `app.py` and `node.py` were Py-Fuscate/bytecode-obfuscated and are stored under `legacy_v3/` for reference only. They are **not executed by V4**. Because the old runtime hid its database schema and operational behavior, V4 does not silently overwrite an existing V3 database; back up any live V3 data before switching.
 
+## Hosting extension pack
+
+### VPS types (Proxmox-style)
+
+Admin → **VPS Types (LXC/KVM)** creates instances with an explicit type:
+
+| Type | Backend | Nesting | Requirement |
+| --- | --- | --- | --- |
+| `lxc` | Incus system container | `security.nesting` | Incus/LXD |
+| `kvm` | Incus VM (QEMU/KVM) | `security.nesting` (VT-x/AMD-V in guest) | `/dev/kvm` |
+| `nonkvm` | QEMU software emulation (TCG) | emulated VMX/SVM where supported | `qemu-system-x86_64`, `qemu-img`, `cloud-localds` |
+
+Nesting can be toggled later from the same page, from the VPS API
+(`POST /vps/<id>/nesting`), from Discord (`/nesting`, `!nesting <id> on|off`) or
+through the node agent (`POST /api/container/<id>/nesting`). Non-KVM VMs are
+created by `scripts/omega-nonkvm.sh` from an Ubuntu cloud image with cloud-init
+(root password + SSH) and a host-forwarded SSH port; the base image can be
+overridden with the `nonkvm_image` panel setting or `OMEGA_NONKVM_BASE_IMAGE`.
+
+### AI assistant (Grok + Gemini)
+
+Admin → **AI Settings** stores per-provider API keys in the panel database:
+
+* Google Gemini (default model `gemini-2.5-flash`)
+* xAI Grok (default model `grok-4.7`)
+
+One configured key powers the floating panel assistant, `POST /ai/chat`,
+`POST /admin/ai/keys`, the Discord `/ask` slash command and the `!ai` prefix
+command. The assistant receives the signed-in user's VPS list (and node summary
+for admins) as context, and never receives the key itself. Test the saved key
+from the same page; model names are configurable and fall back automatically
+when a provider retires a model.
+
+### Background image and hosting name
+
+Admin → **Branding & Background** uploads a PNG/JPG/GIF/WebP background (max
+8 MB, stored in `static/uploads/`), sets the dark overlay, and changes the
+hosting name shown at the top of every page and in the browser title. The
+default brand is **SK Hosting**.
+
+### Discord bot commands
+
+Slash commands: `/vps`, `/vps_action <id> <start|stop|restart>`,
+`/nesting <id> <on|off>`, `/ask <question>`, `/uptime`, `/status`, `/add_admin`.
+Prefix commands (default prefix `!`): `!help`, `!ping`, `!vps`, `!start <id>`,
+`!stop <id>`, `!restart <id>`, `!nesting <id> on|off`, `!ai <question>`.
+
+Prefix commands need the privileged **Message Content Intent** in the Discord
+Developer Portal. If it is disabled the bot logs a warning, retries without the
+intent and keeps answering slash commands. Set `OMEGA_BOT_PREFIX_COMMANDS=0` to
+disable prefix commands explicitly. `discord.py` is now part of
+`requirements.txt`, so `setup.sh` installs it.
+
+### Node install / uninstall commands
+
+Admin → **Node Install / Uninstall** runs the agent scripts on this host, and the
+same commands work from a terminal:
+
+```bash
+sudo bash scripts/omega-node-install.sh          # install / repair the node agent
+sudo bash scripts/omega-node-install.sh --check  # service + health status
+sudo bash scripts/omega-node-uninstall.sh        # stop, disable, remove the unit
+sudo bash scripts/omega-node-uninstall.sh --purge
+```
+
+The uninstaller never deletes the shared panel directory in `/opt/omega-panel`.
+
 ## Verification
 
 See `VERIFY.md` for the build checks. Host-level KVM, Incus daemon, storage quota behavior and guest-OS boot support must still be validated on the target server because those depend on the actual hardware, kernel and virtualization environment.
