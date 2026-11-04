@@ -52,10 +52,6 @@ SETTINGS_COLUMNS = [
     ("node_enroll_key", "TEXT DEFAULT ''"),
 ]
 
-NODES_COLUMNS = [
-    ("node_type", "TEXT DEFAULT ''"),
-]
-
 VPS_COLUMNS = [
     ("vps_type", "TEXT DEFAULT 'lxc'"),
     ("nesting", "INTEGER DEFAULT 0"),
@@ -706,10 +702,6 @@ def register_hosting_extensions(app, deps) -> None:
             for name, definition in SETTINGS_COLUMNS:
                 if name not in columns:
                     conn.execute(f"ALTER TABLE settings ADD COLUMN {name} {definition}")
-            node_columns = {row[1] for row in conn.execute("PRAGMA table_info(nodes)").fetchall()}
-            for name, definition in NODES_COLUMNS:
-                if name not in node_columns:
-                    conn.execute(f"ALTER TABLE nodes ADD COLUMN {name} {definition}")
             vps_columns = {row[1] for row in conn.execute("PRAGMA table_info(vps)").fetchall()}
             for name, definition in VPS_COLUMNS:
                 if name not in vps_columns:
@@ -1315,9 +1307,6 @@ def register_hosting_extensions(app, deps) -> None:
         node_url = str(body.get("node_url") or "").strip().rstrip("/")[:300]
         token = str(body.get("token") or "").strip()[:200]
         hostname = str(body.get("hostname") or name).strip()[:200] or name
-        node_type = str(body.get("node_type") or "").strip().lower()
-        if node_type not in {"lxc", "kvm", "incus"}:
-            node_type = ""
         if not re.fullmatch(r"[A-Za-z0-9._-]{2,64}", name):
             return jsonify({"error": "Invalid node name"}), 400
         if not re.match(r"^https?://", node_url):
@@ -1329,14 +1318,14 @@ def register_hosting_extensions(app, deps) -> None:
             existing = conn.execute("SELECT id FROM nodes WHERE name=?", (name,)).fetchone()
             if existing:
                 conn.execute(
-                    "UPDATE nodes SET hostname=?, node_url=?, api_key=?, status='online', is_local=0, node_type=? WHERE id=?",
-                    (hostname, node_url, token, node_type, existing["id"]),
+                    "UPDATE nodes SET hostname=?, node_url=?, api_key=?, status='online', is_local=0 WHERE id=?",
+                    (hostname, node_url, token, existing["id"]),
                 )
                 node_id = existing["id"]
             else:
                 cur = conn.execute(
-                    "INSERT INTO nodes(name,hostname,node_url,api_key,status,is_local,node_type) VALUES(?,?,?,?,'online',0,?)",
-                    (name, hostname, node_url, token, node_type),
+                    "INSERT INTO nodes(name,hostname,node_url,api_key,status,is_local) VALUES(?,?,?,?,'online',0)",
+                    (name, hostname, node_url, token),
                 )
                 node_id = cur.lastrowid
             conn.commit()
@@ -1350,82 +1339,6 @@ def register_hosting_extensions(app, deps) -> None:
     def ext_node_enroll_key():
         ensure_schema()
         return jsonify({"enroll_key": _node_enroll_key(), "panel_url": _panel_url()})
-
-
-    # ------------------------------ one-command node setup (bundle + script)
-    NODE_BUNDLE_ITEMS = ["node.py", "node_requirements.txt", "core", "scripts",
-                         "systemd/omega-node.service"]
-
-    def _enroll_key_ok(supplied: str) -> bool:
-        expected = _node_enroll_key()
-        return bool(expected) and hmac.compare_digest(str(supplied or "").strip(), expected)
-
-    @app.route("/api/nodes/bundle.tar.gz")
-    @limiter.limit("20/minute")
-    def ext_node_bundle():
-        """Node agent files, so a fresh VPS needs no git checkout."""
-        import tarfile
-        if not _enroll_key_ok(request.args.get("key", "")):
-            return jsonify({"error": "Invalid enrollment key"}), 403
-        root = Path(app.root_path)
-        buf = io.BytesIO()
-        with tarfile.open(fileobj=buf, mode="w:gz") as tar:
-            for item in NODE_BUNDLE_ITEMS:
-                path = root / item
-                if path.exists():
-                    tar.add(str(path), arcname=item,
-                            filter=lambda ti: None if "__pycache__" in ti.name or ti.name.endswith(".pyc") else ti)
-        from flask import Response
-        return Response(buf.getvalue(), mimetype="application/gzip")
-
-    @app.route("/api/nodes/install.sh")
-    @limiter.limit("20/minute")
-    def ext_node_install_script():
-        """Bash script: download files, install the chosen node type, connect."""
-        import shlex
-        from flask import Response
-        if not _enroll_key_ok(request.args.get("key", "")):
-            return Response("echo 'Invalid enrollment key' >&2; exit 1\n", status=403, mimetype="text/x-shellscript")
-        name = str(request.args.get("name") or "").strip()
-        ip = str(request.args.get("ip") or "").strip()
-        node_type = str(request.args.get("type") or "incus").strip().lower()
-        if not re.fullmatch(r"[A-Za-z0-9._-]{2,64}", name):
-            return Response("echo 'Invalid node name' >&2; exit 1\n", status=400, mimetype="text/x-shellscript")
-        if not re.fullmatch(r"[A-Za-z0-9.:\-]{3,253}", ip):
-            return Response("echo 'Invalid node IP/host' >&2; exit 1\n", status=400, mimetype="text/x-shellscript")
-        if node_type not in {"lxc", "kvm", "incus"}:
-            return Response("echo 'type must be lxc, kvm or incus' >&2; exit 1\n", status=400, mimetype="text/x-shellscript")
-        panel = str(request.args.get("panel") or "").strip().rstrip("/")
-        if not re.fullmatch(r"https?://[A-Za-z0-9.\-\[\]:]+(/[A-Za-z0-9._~/-]*)?", panel or ""):
-            panel = _panel_url()
-        script = f"""#!/usr/bin/env bash
-# Vizion Panel - one command node setup ({node_type} node "{name}")
-set -Eeuo pipefail
-[[ "$(id -u)" -eq 0 ]] || {{ echo "Run as root: ... | sudo bash" >&2; exit 1; }}
-PANEL={shlex.quote(panel)}
-KEY={shlex.quote(_node_enroll_key())}
-NAME={shlex.quote(name)}
-NODE_IP={shlex.quote(ip)}
-TYPE={shlex.quote(node_type)}
-if ! command -v curl >/dev/null 2>&1; then apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y curl ca-certificates; fi
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
-echo "[1/3] Downloading node files from the panel ($PANEL)"
-curl -fsS --max-time 120 "$PANEL/api/nodes/bundle.tar.gz?key=$KEY" -o "$WORK/node.tgz"
-install -d /opt/omega-panel
-tar -xzf "$WORK/node.tgz" -C /opt/omega-panel
-chmod +x /opt/omega-panel/scripts/*.sh
-echo "[2/3] Installing node type: $TYPE (this can take a few minutes)"
-bash /opt/omega-panel/scripts/omega-node-install.sh --type="$TYPE" --bind=0.0.0.0
-echo "[3/3] Connecting this node to the panel"
-bash /opt/omega-panel/scripts/omega-node-connect.sh --panel "$PANEL" --key "$KEY" --name "$NAME" --url "http://$NODE_IP:5001"
-PANEL_HOST="$(printf '%s' "$PANEL" | sed -E 's#^https?://##; s#[/:].*$##')"
-PANEL_ADDR="$(getent ahostsv4 "$PANEL_HOST" 2>/dev/null | awk 'NR==1{{print $1}}')"
-if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "Status: active" && [[ -n "$PANEL_ADDR" ]]; then
-  ufw allow from "$PANEL_ADDR" to any port 5001 proto tcp >/dev/null && echo "ufw: port 5001 opened for $PANEL_ADDR"
-fi
-echo "DONE: node $NAME ($TYPE) connected. Create a VPS on it from the panel."
-"""
-        return Response(script, mimetype="text/x-shellscript")
 
     # ------------------------------------------- global branding / AI widget
     @app.after_request

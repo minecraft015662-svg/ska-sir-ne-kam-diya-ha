@@ -60,19 +60,17 @@ PANEL="${PANEL%/}"
 [[ -n "$URL" ]] || URL="http://127.0.0.1:${PORT}"
 URL="${URL%/}"
 
-NODE_TYPE="$(tr -d '\r\n' < /etc/omega-panel/node-type 2>/dev/null || true)"
-PAYLOAD="$(python3 - "$NAME" "$URL" "$TOKEN" "$NODE_TYPE" <<'PY'
+PAYLOAD="$(python3 - "$NAME" "$URL" "$TOKEN" <<'PY'
 import json
 import socket
 import sys
 
-name, url, token, node_type = sys.argv[1:5]
+name, url, token = sys.argv[1:4]
 print(json.dumps({
     "name": name,
     "node_url": url,
     "token": token,
     "hostname": socket.gethostname(),
-    "node_type": node_type,
     "port": None,
 }))
 PY
