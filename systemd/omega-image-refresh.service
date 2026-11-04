@@ -1,5 +1,5 @@
 [Unit]
-Description=Omega Incus image refresh check
+Description=Vizion Incus image refresh check
 After=incus.service
 
 [Service]

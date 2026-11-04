@@ -1,5 +1,5 @@
 [Unit]
-Description=Run Omega VPS reconciliation every minute
+Description=Run Vizion VPS reconciliation every minute
 
 [Timer]
 OnBootSec=45s

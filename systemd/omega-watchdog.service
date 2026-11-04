@@ -1,5 +1,5 @@
 [Unit]
-Description=Omega Panel VPS reconciliation watchdog
+Description=Vizion Panel VPS reconciliation watchdog
 After=omega-panel.service omega-node.service
 
 [Service]

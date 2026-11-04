@@ -11,6 +11,7 @@ working for containers and Incus VMs. Nesting is applied for all three types.
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -146,6 +147,24 @@ def parse_output(output: str) -> dict:
     return values
 
 
+def vm_image_ref(alias: str) -> str:
+    """Return a VM-capable image reference.
+
+    The panel's OS aliases (for example ``22.04`` or ``debian/13``) resolve to
+    locally cached *container* images, and Incus refuses to launch those with
+    ``--vm`` ("Asked for a VM but image is of type container"). For VMs we
+    therefore always pull from the ``images:`` remote, which ships VM variants.
+    """
+    value = str(alias or "").strip()
+    if not value:
+        return "images:ubuntu/22.04"
+    if ":" in value:
+        return value
+    if re.fullmatch(r"\d{2}\.\d{2}", value):
+        return f"images:ubuntu/{value}"
+    return f"images:{value}"
+
+
 def create_instance(name: str, image_alias: str, vps_type: str = DEFAULT_TYPE,
                     nesting: bool = False, vcpus: int = 2, memory_mb: int = 2048,
                     disk_gb: int = 20, image_path: str = "") -> dict:
@@ -174,7 +193,8 @@ def create_instance(name: str, image_alias: str, vps_type: str = DEFAULT_TYPE,
     binary = cli()
     if not binary:
         raise VpsTypeError("Incus/LXD CLI is not installed on this node.")
-    args = [binary, "launch", str(image_alias), name]
+    image_ref = vm_image_ref(image_alias) if vps_type == "kvm" else str(image_alias)
+    args = [binary, "launch", image_ref, name]
     if vps_type == "kvm":
         args.append("--vm")
     args += [
@@ -187,7 +207,14 @@ def create_instance(name: str, image_alias: str, vps_type: str = DEFAULT_TYPE,
         args += ["-c", "security.privileged=true"]
     args += ["-d", f"root,size={int(disk_gb)}GiB"]
     code, output = _run(args, timeout=900)
+    if code != 0 and vps_type == "kvm" and image_ref != str(image_alias) and "not found" in output.lower():
+        # The translated remote image does not exist; fall back to the original alias.
+        _run([binary, "delete", name, "--force"], timeout=60)
+        args[2] = str(image_alias)
+        code, output = _run(args, timeout=900)
     if code != 0:
+        # A failed launch can leave a half-created instance behind.
+        _run([binary, "delete", name, "--force"], timeout=60)
         raise VpsTypeError(f"Instance creation failed ({vps_type}): {output[-1200:]}")
     # Some images ignore the launch -c flag; make the nesting state explicit.
     set_nesting(name, vps_type, bool(nesting))
@@ -260,6 +287,9 @@ def remove(name: str, vps_type: str) -> tuple[bool, str]:
     if not binary:
         return False, "Incus/LXD CLI is not installed on this node."
     code, output = _run([binary, "delete", name, "--force"], timeout=300)
+    if code != 0 and "not found" in output.lower():
+        # Already gone (for example after an earlier failed backend switch).
+        return True, "Instance was already removed."
     return code == 0, output[-800:]
 
 

@@ -1,5 +1,5 @@
 [Unit]
-Description=Omega Panel V4 Stable Web Panel
+Description=Vizion Panel V4 Stable Web Panel
 After=network-online.target incus.service
 Wants=network-online.target
 

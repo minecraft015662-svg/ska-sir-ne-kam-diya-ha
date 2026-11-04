@@ -1,5 +1,5 @@
 [Unit]
-Description=Omega Panel V4 Stable Node Agent
+Description=Vizion Panel V4 Stable Node Agent
 After=network-online.target incus.service
 Wants=network-online.target
 

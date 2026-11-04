@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Omega Panel - TCP port forwarding with socat + systemd.
+# Vizion Panel - TCP port forwarding with socat + systemd.
 #
 #   sudo bash scripts/omega-portforward.sh add --listen 8080 --to 10.0.0.5:80
 #   sudo bash scripts/omega-portforward.sh list
@@ -22,7 +22,7 @@ say() { printf '> %s\n' "$*"; }
 
 usage() {
     cat <<EOF
-Omega port forwarding (socat)
+Vizion port forwarding (socat)
 
 Usage:
   sudo bash scripts/omega-portforward.sh add --listen 8080 --to 10.0.0.5:80
@@ -54,7 +54,7 @@ add_forward() {
     local label="${NAME:-forward}"
     cat >"$unit" <<EOF
 [Unit]
-Description=Omega port forward ${LISTEN} -> ${TARGET} (${label})
+Description=Vizion port forward ${LISTEN} -> ${TARGET} (${label})
 After=network-online.target
 Wants=network-online.target
 
@@ -76,7 +76,7 @@ EOF
 }
 
 list_forwards() {
-    echo "Active Omega port forwards:"
+    echo "Active Vizion port forwards:"
     local found=0
     for unit in /etc/systemd/system/omega-forward-*.service; do
         [[ -e "$unit" ]] || continue

@@ -1,5 +1,5 @@
 [Unit]
-Description=Omega Panel V4 Stable provisioning worker
+Description=Vizion Panel V4 Stable provisioning worker
 After=network-online.target incus.service
 Wants=network-online.target
 

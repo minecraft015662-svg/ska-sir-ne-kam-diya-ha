@@ -11,7 +11,7 @@ command -v virsh >/dev/null 2>&1 && say OK 'libvirt/virsh installed' || say WARN
 [[ -e /dev/kvm ]] && say OK '/dev/kvm present' || say WARN '/dev/kvm absent (VM acceleration unavailable)'
 command -v kvm-ok >/dev/null 2>&1 && check kvm-ok || say WARN 'kvm-ok not installed'
 if command -v systemctl >/dev/null 2>&1; then
-  for unit in omega-panel.service omega-node.service omega-jobs.service omega-watchdog.timer omega-image-refresh.timer; do
+  for unit in omega-panel.service omega-node.service omega-jobs.service omega-bot.service omega-watchdog.timer omega-image-refresh.timer; do
     check systemctl is-enabled "$unit"
   done
 fi

@@ -2,13 +2,13 @@
 <html lang="{{ session.get('lang','en') }}">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{{ title|default('Omega Panel V4 Stable') }}</title>
+  <title>{{ title|default('Vizion Panel V4 Stable') }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/omega.css') }}">
 </head>
 <body>
 <div class="shell">
   <aside class="sidebar">
-    <div class="brand"><div class="brand-mark">Ω</div><div><b>Omega Panel</b><small>V4 Stable</small></div></div>
+    <div class="brand"><div class="brand-mark">Ω</div><div><b>Vizion Panel</b><small>V4 Stable</small></div></div>
     {% if session.get('uid') %}
     <nav>
       <a class="nav-link" href="{{ url_for('dashboard') }}">▦ <span>{{ _('dashboard') }}</span></a>
@@ -23,7 +23,7 @@
     <header class="topbar"><div><span class="eyebrow">RGNODES™</span><h1>{{ heading|default(_('dashboard')) }}</h1></div><div class="user-pill">⚡ {{ session.get('username','Guest') }}</div></header>
     {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack">{% for cat,msg in messages %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}</div>{% endif %}{% endwith %}
     {% block content %}{% endblock %}
-    <footer>⚡ RGNODES™ · Omega Panel V4 Stable · Primary author: MrZetrix · Credit: NafiGamer</footer>
+    <footer>⚡ RGNODES™ · Vizion Panel V4 Stable · Primary author: MrZetrix · Credit: NafiGamer</footer>
   </main>
 </div>
 <script src="{{ url_for('static', filename='js/omega.js') }}"></script>

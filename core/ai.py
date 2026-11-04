@@ -1,4 +1,4 @@
-"""Provider-agnostic AI client for the Omega hosting panel.
+"""Provider-agnostic AI client for the Vizion hosting panel.
 
 Only two providers are supported on purpose (the ones the panel admin can
 configure): Google Gemini and xAI Grok. The panel stores the API key in its
@@ -35,7 +35,7 @@ PROVIDERS: dict[str, dict] = {
 
 DEFAULT_PROVIDER = "gemini"
 DEFAULT_SYSTEM_PROMPT = (
-    "You are the built-in assistant of an Omega hosting panel (VPS control panel). "
+    "You are the built-in assistant of a Vizion hosting panel (VPS control panel). "
     "Answer short, practical questions about the user's servers, LXC containers, "
     "KVM/non-KVM virtual machines, nesting, SSH, backups and panel settings. "
     "Never invent credentials, node names or IP addresses that are not in the supplied "

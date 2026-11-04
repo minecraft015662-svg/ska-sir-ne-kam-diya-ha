@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Omega Panel - uninstall the panel services.
+# Vizion Panel - uninstall the panel services.
 #
 #   sudo bash scripts/omega-panel-uninstall.sh           # services only, keep data
 #   sudo bash scripts/omega-panel-uninstall.sh --purge   # also delete code/database/config
@@ -29,7 +29,7 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 [[ "$(id -u)" -eq 0 ]] || die "Run as root: sudo bash scripts/omega-panel-uninstall.sh [--purge]"
 command -v systemctl >/dev/null 2>&1 || die "systemd is required"
 
-UNITS=(omega-panel.service omega-node.service omega-jobs.service omega-watchdog.timer omega-image-refresh.timer)
+UNITS=(omega-panel.service omega-node.service omega-jobs.service omega-bot.service omega-watchdog.timer omega-image-refresh.timer)
 for unit in "${UNITS[@]}"; do
     if systemctl list-unit-files 2>/dev/null | grep -q "^${unit}"; then
         systemctl disable --now "$unit" >/dev/null 2>&1 || true

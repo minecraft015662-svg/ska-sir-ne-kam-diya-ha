@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Omega Status · FLOATIX</title>
+<title>Vizion Status · FLOATIX</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -12,7 +12,7 @@
 .table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:700px}th{text-align:left;color:#8ea2bc;font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:12px;border-bottom:1px solid var(--line)}td{padding:13px 12px;border-bottom:1px solid rgba(148,163,184,.09);font-size:12px;color:#dce8f7}tbody tr:hover{background:rgba(72,215,255,.035)}.muted{color:var(--muted)}.foot{text-align:center;color:#63738d;font-size:11px;padding:24px 0 5px}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top{align-items:flex-start;flex-direction:column}}@media(max-width:480px){body{padding:22px 13px}.grid{gap:9px}.metric{padding:14px}.metric .value{font-size:23px}}
 </style></head><body><main class="shell">
-<header class="top"><div><div class="eyebrow">FLOATIX · INFRASTRUCTURE</div><h1>System Status</h1><p class="sub">Live health overview for Omega Panel and connected nodes.</p></div><div class="actions"><a class="btn" href="/admin/integrations">Settings</a><a class="btn" href="/admin/health">Refresh status ↗</a></div></header>
+<header class="top"><div><div class="eyebrow">FLOATIX · INFRASTRUCTURE</div><h1>System Status</h1><p class="sub">Live health overview for Vizion Panel and connected nodes.</p></div><div class="actions"><a class="btn" href="/admin/integrations">Settings</a><a class="btn" href="/admin/health">Refresh status ↗</a></div></header>
 <section class="grid">
 <div class="glass metric"><div class="label">Panel status</div><div class="value {{ 'online' if panel_status == 'online' else 'offline' if panel_status == 'offline' else 'unknown' }}"><span class="dot"></span>{{ panel_status|upper }}</div><div class="hint">Application and database</div></div>
 <div class="glass metric"><div class="label">Online nodes</div><div class="value">{{ online_nodes }} / {{ nodes|length }}</div><div class="hint">Connected compute nodes</div></div>
@@ -24,4 +24,4 @@
 </div></section>
 <section class="glass section"><div class="section-head"><h2>Recent health checks</h2><span class="pill">Latest 100 records</span></div><div class="table-wrap"><table><thead><tr><th>Timestamp</th><th>Component</th><th>Status</th><th>Latency</th><th>Details</th></tr></thead><tbody>
 {% for r in rows %}<tr><td>{{ r.checked_at }}</td><td>{{ r.node_name }}</td><td class="{{ 'online' if r.status == 'online' else 'offline' }}"><span class="dot"></span>{{ r.status|upper }}</td><td>{{ '%.0f ms'|format(r.latency_ms) if r.latency_ms is not none else '—' }}</td><td class="muted">{{ r.details }}</td></tr>{% else %}<tr><td colspan="5" class="muted">No health checks recorded yet. The monitor will populate this table after its first run.</td></tr>{% endfor %}
-</tbody></table></div></section><footer class="foot">Omega Panel · Created by FLOATIX</footer></main><script>setTimeout(()=>location.reload(),30000);</script></body></html>
+</tbody></table></div></section><footer class="foot">Vizion Panel · Created by FLOATIX</footer></main><script>setTimeout(()=>location.reload(),30000);</script></body></html>

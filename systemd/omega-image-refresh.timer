@@ -1,5 +1,5 @@
 [Unit]
-Description=Run Omega Incus image refresh check every 6 hours
+Description=Run Vizion Incus image refresh check every 6 hours
 
 [Timer]
 OnBootSec=2m

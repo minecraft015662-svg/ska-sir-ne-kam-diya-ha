@@ -1,1 +1,1 @@
-# Omega Panel core package.
+# Vizion Panel core package.

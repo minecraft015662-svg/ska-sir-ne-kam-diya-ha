@@ -1,0 +1,23 @@
+[Unit]
+Description=Vizion Panel Discord bot and background workers
+After=network-online.target incus.service omega-panel.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=omega-panel
+Group=omega-panel
+WorkingDirectory=/opt/omega-panel
+Environment=PYTHONPATH=/opt/omega-panel
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/omega-panel/omega.env
+ExecStart=/opt/omega-panel/venv/bin/python /opt/omega-panel/bot_runner.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/omega-panel /etc/omega-panel
+
+[Install]
+WantedBy=multi-user.target

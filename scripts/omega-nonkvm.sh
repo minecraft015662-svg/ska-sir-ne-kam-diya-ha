@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Omega Panel - non-KVM (software emulated QEMU/TCG) VPS manager.
+# Vizion Panel - non-KVM (software emulated QEMU/TCG) VPS manager.
 #
 # Creates real virtual machines on hosts that do not expose /dev/kvm. Each VPS is
 # a qcow2 overlay on an Ubuntu cloud image, booted with cloud-init (root password

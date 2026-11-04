@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Omega Panel - uninstall the node agent from this host.
+# Vizion Panel - uninstall the node agent from this host.
 #
 #   sudo bash scripts/omega-node-uninstall.sh            # stop + disable + remove unit
 #   sudo bash scripts/omega-node-uninstall.sh --purge    # also delete the node token
@@ -16,7 +16,7 @@ for arg in "$@"; do
     --purge) PURGE=1 ;;
     --help)
       cat <<EOF
-Omega node agent uninstaller
+Vizion node agent uninstaller
 
 Usage: sudo bash scripts/omega-node-uninstall.sh [--purge]
 
