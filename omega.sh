@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# OMEGA PANEL - one command menu
+# VIZION PANEL - one command menu
 #
 # No clone needed:
 #   bash <(curl -sL https://raw.githubusercontent.com/minecraft015662-svg/ska-sir-ne-kam-diya-ha/main/omega.sh)
@@ -44,15 +44,49 @@ ok()   { printf '\033[32m✓\033[0m %s\n' "$*"; }
 warn() { printf '\033[33m!\033[0m %s\n' "$*"; }
 die()  { printf '\033[31m✗\033[0m %s\n' "$*" >&2; exit 1; }
 
+# Make box alignment reliable (counts characters, not bytes)
+if locale -a 2>/dev/null | grep -qi '^c\.utf-\?8$'; then export LC_ALL=C.UTF-8; fi
+
+BRAND_NAME="${OMEGA_BRAND:-VIZION  PANEL}"
+BRAND_SUB="VPS · LXC · KVM control panel"
+BRAND_CREDIT="Credit: sartahk34 · SKa"
+BOX_W=46
+
+if [[ -t 1 ]]; then
+    C_BORDER=$'\033[36m'; C_TITLE=$'\033[1;97m'; C_SUB=$'\033[96m'; C_DIM=$'\033[2;37m'; C_RST=$'\033[0m'
+    C_OK=$'\033[32m'; C_BAD=$'\033[31m'; C_WARN=$'\033[33m'
+else
+    C_BORDER=""; C_TITLE=""; C_SUB=""; C_DIM=""; C_RST=""; C_OK=""; C_BAD=""; C_WARN=""
+fi
+
+box_line() {   # box_line "text" "color"
+    local text="$1" color="${2:-}" len l r
+    len=${#text}
+    l=$(( (BOX_W - len) / 2 )); r=$(( BOX_W - len - l ))
+    printf '  %s║%s%*s%s%s%s%*s%s║%s\n' "$C_BORDER" "$C_RST" "$l" "" "$color" "$text" "$C_RST" "$r" "" "$C_BORDER" "$C_RST"
+}
+
 print_logo() {
-    cat <<'LOGO'
-  ┌──────────────────────────────────────┐
-  │            OMEGA  PANEL              │
-  │    VPS · LXC · KVM control panel     │
-  │   Credit: sartahk34 · SKa            │
-  └──────────────────────────────────────┘
-LOGO
+    local bar
+    bar="$(printf '═%.0s' $(seq 1 "$BOX_W"))"
+    printf '\n  %s╔%s╗%s\n' "$C_BORDER" "$bar" "$C_RST"
+    box_line "" ""
+    box_line "$BRAND_NAME" "$C_TITLE"
+    box_line "$BRAND_SUB" "$C_SUB"
+    box_line "" ""
+    box_line "$BRAND_CREDIT" "$C_DIM"
+    printf '  %s╚%s╝%s\n' "$C_BORDER" "$bar" "$C_RST"
+    print_state_line
     printf '\n'
+}
+
+print_state_line() {
+    local state="not installed" color="$C_BAD"
+    if command -v systemctl >/dev/null 2>&1 && [[ -f /etc/systemd/system/omega-panel.service ]]; then
+        state="$(systemctl is-active omega-panel.service 2>/dev/null || true)"
+        if [[ "$state" == "active" ]]; then color="$C_OK"; else color="$C_WARN"; fi
+    fi
+    printf '  Panel: %s%s%s   Port: %s   Dir: %s\n' "$color" "${state:-unknown}" "$C_RST" "$PANEL_PORT" "$INSTALL_DIR"
 }
 
 need_root() {
@@ -140,7 +174,7 @@ port_forward() {
 
 panel_status() {
     echo
-    echo "Omega Panel status"
+    echo "Panel status"
     echo "------------------"
     if command -v systemctl >/dev/null 2>&1; then
         for unit in omega-panel.service omega-node.service omega-jobs.service omega-watchdog.timer omega-image-refresh.timer; do
@@ -159,44 +193,152 @@ panel_status() {
     echo
 }
 
+fetch_latest() {   # downloads latest code into $1
+    local dest="$1"
+    command -v curl >/dev/null 2>&1 || die "curl is required for update."
+    command -v tar  >/dev/null 2>&1 || die "tar is required for update."
+    say "Downloading latest code (${REPO_SLUG}@${REPO_REF}) ..."
+    curl -fsSL "$ARCHIVE_URL" | tar -xz -C "$dest" --strip-components=1 \
+        || die "Download failed. Check internet / repo access."
+    [[ -f "$dest/setup.sh" && -f "$dest/app.py" ]] || die "Downloaded archive looks incomplete."
+}
+
+restart_services() {
+    systemctl daemon-reload 2>/dev/null || true
+    for unit in omega-panel.service omega-jobs.service omega-node.service; do
+        if [[ -f "/etc/systemd/system/$unit" ]]; then
+            systemctl restart "$unit" 2>/dev/null && ok "restarted $unit" || warn "could not restart $unit"
+        fi
+    done
+}
+
 update_panel() {
     need_root
     need_systemd
+    local tmp
     if git -C "$ROOT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        say "Pulling the latest code ..."
-        git -C "$ROOT_DIR" pull --ff-only
+        say "Git checkout found - pulling the latest code ..."
+        git -C "$ROOT_DIR" pull --ff-only || warn "git pull failed, continuing with local code."
+        bash "$ROOT_DIR/setup.sh" --noninteractive
     else
-        warn "Not a git checkout; skipping git pull."
+        tmp="$(mktemp -d)"
+        fetch_latest "$tmp"
+        say "Applying update to ${INSTALL_DIR} (database and config are kept) ..."
+        bash "$tmp/setup.sh" --noninteractive
+        rm -rf "$tmp"
     fi
-    say "Re-running the installer ..."
-    bash "$ROOT_DIR/setup.sh" --noninteractive
+    restart_services
     ok "Update finished."
+    doctor_panel quiet || true
+}
+
+fix_panel() {
+    need_root
+    need_systemd
+    say "Repairing ${INSTALL_DIR} ..."
+    [[ -d "$INSTALL_DIR" ]] || die "Panel is not installed. Choose Install first."
+    if [[ "$ROOT_DIR" != "$INSTALL_DIR" && -f "$ROOT_DIR/app.py" ]]; then
+        say "Syncing code from ${ROOT_DIR} ..."
+        cp -a "$ROOT_DIR"/. "$INSTALL_DIR"/
+    fi
+    if [[ -x "$INSTALL_DIR/venv/bin/pip" ]]; then
+        say "Re-installing Python requirements ..."
+        "$INSTALL_DIR/venv/bin/pip" install --no-cache-dir -q -r "$INSTALL_DIR/requirements.txt" \
+            && ok "requirements ok" || warn "pip install had errors"
+    else
+        warn "venv missing - run Update (it rebuilds everything)."
+    fi
+    chmod +x "$INSTALL_DIR"/scripts/*.sh "$INSTALL_DIR/omega.sh" 2>/dev/null || true
+    if id omega >/dev/null 2>&1; then chown -R omega:omega "$INSTALL_DIR" /var/lib/omega-panel 2>/dev/null || true; fi
+    restart_services
+    sleep 2
+    doctor_panel quiet || true
+    echo
+    echo "  If an error still shows, run:  sudo bash ${INSTALL_DIR}/omega.sh --update"
+}
+
+doctor_panel() {
+    local quiet="${1:-}" bad=0 py="python3"
+    [[ "$quiet" == "quiet" ]] || { echo; echo "Panel doctor"; echo "------------"; }
+    [[ -x "$INSTALL_DIR/venv/bin/python" ]] && py="$INSTALL_DIR/venv/bin/python"
+
+    if [[ -f "$INSTALL_DIR/app.py" ]]; then
+        if "$py" -m py_compile "$INSTALL_DIR/app.py" 2>/dev/null; then ok "app.py syntax ok"; else printf '%s✗%s app.py has a syntax error\n' "$C_BAD" "$C_RST"; bad=1; fi
+        if out="$(cd "$INSTALL_DIR" && "$py" - <<'PY'
+import ast, builtins, sys
+src = open("app.py").read(); t = ast.parse(src)
+d = set(dir(builtins))
+for n in ast.walk(t):
+    if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        d.add(n.name)
+        if not isinstance(n, ast.ClassDef):
+            a = n.args
+            for x in a.args + a.kwonlyargs + a.posonlyargs: d.add(x.arg)
+            if a.vararg: d.add(a.vararg.arg)
+            if a.kwarg: d.add(a.kwarg.arg)
+    elif isinstance(n, ast.Lambda):
+        for x in n.args.args + n.args.kwonlyargs: d.add(x.arg)
+        if n.args.vararg: d.add(n.args.vararg.arg)
+        if n.args.kwarg: d.add(n.args.kwarg.arg)
+    elif isinstance(n, ast.Name) and isinstance(n.ctx, (ast.Store, ast.Del)): d.add(n.id)
+    elif isinstance(n, (ast.Import, ast.ImportFrom)):
+        for a in n.names: d.add((a.asname or a.name).split(".")[0])
+    elif isinstance(n, ast.ExceptHandler) and n.name: d.add(n.name)
+    elif isinstance(n, (ast.Global, ast.Nonlocal)): d.update(n.names)
+miss = sorted({(n.id, n.lineno) for n in ast.walk(t) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load) and n.id not in d and n.id != "__file__"}, key=lambda x: x[1])
+for name, line in miss: print(f"undefined name '{name}' at app.py line {line}")
+sys.exit(1 if miss else 0)
+PY
+        )"; then ok "no undefined names in app.py"; else printf '%s✗%s %s\n' "$C_BAD" "$C_RST" "$out"; bad=1; fi
+    else
+        printf '%s✗%s %s/app.py not found (not installed?)\n' "$C_BAD" "$C_RST" "$INSTALL_DIR"; bad=1
+    fi
+
+    if command -v systemctl >/dev/null 2>&1; then
+        for unit in omega-panel.service omega-jobs.service omega-node.service; do
+            [[ -f "/etc/systemd/system/$unit" ]] || continue
+            if [[ "$(systemctl is-active "$unit" 2>/dev/null)" == "active" ]]; then ok "$unit running"; else printf '%s✗%s %s is not running\n' "$C_BAD" "$C_RST" "$unit"; bad=1; fi
+        done
+    fi
+
+    if curl -fsS -o /dev/null --max-time 5 "http://127.0.0.1:${PANEL_PORT}/" 2>/dev/null; then ok "panel answers on port ${PANEL_PORT}"; else printf '%s✗%s panel does not answer on port %s\n' "$C_BAD" "$C_RST" "$PANEL_PORT"; bad=1; fi
+
+    if [[ "$bad" -ne 0 ]] && command -v journalctl >/dev/null 2>&1; then
+        echo; warn "Last panel log lines:"
+        journalctl -u omega-panel.service -n 15 --no-pager 2>/dev/null | sed 's/^/    /' || true
+    fi
+    return "$bad"
 }
 
 main_menu() {
     while true; do
         clear_screen
         print_logo
-        cat <<EOF
-  1) Install panel
-  2) Uninstall panel
-  3) Node install + connect
-  4) Port forwarding
-  5) Panel status
-  6) Update panel
-  7) Exit
-EOF
+        printf '  %s[ SETUP ]%s\n' "$C_SUB" "$C_RST"
+        echo "    1) Install panel"
+        echo "    2) Update panel          (latest code from GitHub)"
+        echo "    3) Fix / repair panel    (use when 'Something went wrong')"
+        echo "    4) Doctor                (check errors + logs)"
+        printf '\n  %s[ MANAGE ]%s\n' "$C_SUB" "$C_RST"
+        echo "    5) Panel status"
+        echo "    6) Node install + connect"
+        echo "    7) Port forwarding"
+        printf '\n  %s[ DANGER ]%s\n' "$C_SUB" "$C_RST"
+        echo "    8) Uninstall panel"
+        echo "    0) Exit"
         echo
-        read -rp "Choose [1-7]: " choice || exit 0
+        read -rp "  Choose [0-8]: " choice || exit 0
         case "${choice:-}" in
             1) install_panel ;;
-            2) uninstall_panel ;;
-            3) node_connect ;;
-            4) port_forward ;;
+            2) update_panel ;;
+            3) fix_panel ;;
+            4) doctor_panel || true ;;
             5) panel_status ;;
-            6) update_panel ;;
-            7|q|Q) exit 0 ;;
-            *) warn "Please choose 1-7." ;;
+            6) node_connect ;;
+            7) port_forward ;;
+            8) uninstall_panel ;;
+            0|q|Q) exit 0 ;;
+            *) warn "Please choose 0-8." ;;
         esac
         echo
         read -rp "Press Enter to return to the menu..." _ || exit 0
@@ -210,6 +352,8 @@ case "${1:-}" in
     --port-forward) port_forward ;;
     --status) panel_status ;;
     --update) update_panel ;;
+    --fix|--repair) fix_panel ;;
+    --doctor) doctor_panel ;;
     --help|-h)
         clear_screen
         print_logo
@@ -222,7 +366,9 @@ Usage: sudo bash omega.sh [option]
   --node          install this host as a node and connect it to a panel
   --port-forward  create/list/remove socat port forwards
   --status        service and node agent health
-  --update        git pull + re-run the installer
+  --update        download latest code + re-run the installer
+  --fix           repair deps/permissions and restart services
+  --doctor        check code, services, port and show logs
 
 One line (no clone):
   bash <(curl -sL https://raw.githubusercontent.com/${REPO_SLUG}/${REPO_REF}/omega.sh)
