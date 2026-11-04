@@ -203,6 +203,7 @@ chmod 0640 /etc/omega-panel/omega.env
 install -m 0644 "$INSTALL_DIR/systemd/omega-panel.service" /etc/systemd/system/omega-panel.service
 install -m 0644 "$INSTALL_DIR/systemd/omega-node.service" /etc/systemd/system/omega-node.service
 install -m 0644 "$INSTALL_DIR/systemd/omega-jobs.service" /etc/systemd/system/omega-jobs.service
+install -m 0644 "$INSTALL_DIR/systemd/omega-bot.service" /etc/systemd/system/omega-bot.service
 install -m 0644 "$INSTALL_DIR/systemd/omega-watchdog.service" /etc/systemd/system/omega-watchdog.service
 install -m 0644 "$INSTALL_DIR/systemd/omega-watchdog.timer" /etc/systemd/system/omega-watchdog.timer
 install -m 0644 "$INSTALL_DIR/systemd/omega-image-refresh.service" /etc/systemd/system/omega-image-refresh.service
@@ -211,6 +212,8 @@ systemctl daemon-reload
 systemctl enable --now omega-panel.service
 systemctl enable --now omega-node.service
 systemctl enable --now omega-jobs.service
+systemctl enable omega-bot.service
+systemctl restart omega-bot.service || true
 systemctl enable --now omega-watchdog.timer
 systemctl enable --now omega-image-refresh.timer
 

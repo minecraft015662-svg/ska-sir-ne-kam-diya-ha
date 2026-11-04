@@ -177,7 +177,7 @@ panel_status() {
     echo "Panel status"
     echo "------------------"
     if command -v systemctl >/dev/null 2>&1; then
-        for unit in omega-panel.service omega-node.service omega-jobs.service omega-watchdog.timer omega-image-refresh.timer; do
+        for unit in omega-panel.service omega-bot.service omega-node.service omega-jobs.service omega-watchdog.timer omega-image-refresh.timer; do
             state="$(systemctl is-active "$unit" 2>/dev/null || true)"
             printf '  %-28s %s\n' "$unit" "${state:-not-installed}"
         done
@@ -204,8 +204,14 @@ fetch_latest() {   # downloads latest code into $1
 }
 
 restart_services() {
+    # Make sure the Discord bot / background worker unit exists (added in newer versions).
+    if [[ -f "$INSTALL_DIR/systemd/omega-bot.service" && ! -f /etc/systemd/system/omega-bot.service ]]; then
+        install -m 0644 "$INSTALL_DIR/systemd/omega-bot.service" /etc/systemd/system/omega-bot.service
+        systemctl daemon-reload 2>/dev/null || true
+        systemctl enable omega-bot.service >/dev/null 2>&1 || true
+    fi
     systemctl daemon-reload 2>/dev/null || true
-    for unit in omega-panel.service omega-jobs.service omega-node.service; do
+    for unit in omega-panel.service omega-bot.service omega-jobs.service omega-node.service; do
         if [[ -f "/etc/systemd/system/$unit" ]]; then
             systemctl restart "$unit" 2>/dev/null && ok "restarted $unit" || warn "could not restart $unit"
         fi
@@ -249,7 +255,7 @@ fix_panel() {
         warn "venv missing - run Update (it rebuilds everything)."
     fi
     chmod +x "$INSTALL_DIR"/scripts/*.sh "$INSTALL_DIR/omega.sh" 2>/dev/null || true
-    if id omega >/dev/null 2>&1; then chown -R omega:omega "$INSTALL_DIR" /var/lib/omega-panel 2>/dev/null || true; fi
+    if id omega-panel >/dev/null 2>&1; then chown -R omega-panel:omega-panel "$INSTALL_DIR" /var/lib/omega-panel 2>/dev/null || true; fi
     restart_services
     sleep 2
     doctor_panel quiet || true
@@ -295,7 +301,7 @@ PY
     fi
 
     if command -v systemctl >/dev/null 2>&1; then
-        for unit in omega-panel.service omega-jobs.service omega-node.service; do
+        for unit in omega-panel.service omega-bot.service omega-jobs.service omega-node.service; do
             [[ -f "/etc/systemd/system/$unit" ]] || continue
             if [[ "$(systemctl is-active "$unit" 2>/dev/null)" == "active" ]]; then ok "$unit running"; else printf '%s✗%s %s is not running\n' "$C_BAD" "$C_RST" "$unit"; bad=1; fi
         done
@@ -306,6 +312,10 @@ PY
     if [[ "$bad" -ne 0 ]] && command -v journalctl >/dev/null 2>&1; then
         echo; warn "Last panel log lines:"
         journalctl -u omega-panel.service -n 15 --no-pager 2>/dev/null | sed 's/^/    /' || true
+        if [[ -f /etc/systemd/system/omega-bot.service ]]; then
+            echo; warn "Last bot log lines:"
+            journalctl -u omega-bot.service -n 15 --no-pager 2>/dev/null | sed 's/^/    /' || true
+        fi
     fi
     return "$bad"
 }
