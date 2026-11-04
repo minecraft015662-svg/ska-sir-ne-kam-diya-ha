@@ -616,7 +616,7 @@ def create_container():
             instance_config['security.privileged'] = 'true'
         body = {
             'name': name,
-            'source': {'type': 'image', 'alias': image},
+            'source': _instance_source(image, vps_type),
             'config': instance_config,
             'devices': {
                 'root': {'type': 'disk', 'path': '/', 'pool': 'default', 'size': disk_str},
@@ -649,6 +649,25 @@ def create_container():
         return jsonify({'status': 'ok', 'container_id': name, 'name': name})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+def _instance_source(image, vps_type):
+    """Image source for instance creation.
+
+    Local aliases such as '22.04' point at cached container images, which cannot
+    be used for virtual machines. For KVM we pull the VM variant from the
+    public images remote instead.
+    """
+    image = str(image or '').strip()
+    if vps_type != 'kvm':
+        return {'type': 'image', 'alias': image}
+    alias = image
+    if ':' in alias:
+        alias = alias.split(':', 1)[1]
+    if re.fullmatch(r'\d{2}\.\d{2}', alias):
+        alias = 'ubuntu/' + alias
+    return {'type': 'image', 'mode': 'pull', 'protocol': 'simplestreams',
+            'server': 'https://images.linuxcontainers.org', 'alias': alias}
 
 
 @app.route('/api/container/<container_id>/nesting', methods=['POST'])
