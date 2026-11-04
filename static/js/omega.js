@@ -1,11 +1,27 @@
-(function(){
-  async function poll(id){
-    try{
-      const r=await fetch('/api/jobs/'+id,{headers:{'Accept':'application/json'}}); if(!r.ok)return;
-      const j=await r.json(); const row=document.querySelector('[data-job="'+id+'"]');
-      if(row){const p=row.querySelector('.progress i'),m=row.querySelector('.job-message'),pct=row.querySelector('.job-pct'); p.style.width=(j.progress||0)+'%';m.textContent=j.message||'';pct.textContent=(j.progress||0)+'%';}
-      if(!['done','error'].includes(j.status)) setTimeout(()=>poll(id),1800); else setTimeout(()=>location.reload(),900);
-    }catch(e){setTimeout(()=>poll(id),3000)}
-  }
-  (window.OMEGA_JOBS||[]).forEach(poll);
-})();
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('createVpsForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function(e) {
+        const modal = document.getElementById('vpsLoaderModal');
+        const stepText = document.getElementById('loaderStepText');
+        const progressBar = document.getElementById('progressBar');
+
+        modal.style.display = 'flex';
+
+        // Animated step progression
+        const steps = [
+            { text: "Allocating container & filesystem...", progress: 25, delay: 1000 },
+            { text: "Setting up IP networking & port forwarding...", progress: 50, delay: 3000 },
+            { text: "Configuring root password & SSH security...", progress: 75, delay: 5500 },
+            { text: "Finalizing startup sequence...", progress: 95, delay: 7500 }
+        ];
+
+        steps.forEach(step => {
+            setTimeout(() => {
+                stepText.innerText = step.text;
+                progressBar.style.width = step.progress + "%";
+            }, step.delay);
+        });
+    });
+});
