@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         modal.style.display = 'flex';
 
-        // Animated step progression
         const steps = [
             { text: "Allocating container & filesystem...", progress: 25, delay: 1000 },
             { text: "Setting up IP networking & port forwarding...", progress: 50, delay: 3000 },

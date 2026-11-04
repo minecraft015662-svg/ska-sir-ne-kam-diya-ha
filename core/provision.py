@@ -12,7 +12,7 @@ def create_vps_container(container_name, image="ubuntu:22.04", cpu_cores=1, ram_
 
         # 2. Start container
         subprocess.run(f"lxc-start -n {container_name}", shell=True, check=False)
-        time.sleep(2) # Give container time to initialize init system
+        time.sleep(2)
 
         # 3. Set root password reliably using multiple fallback methods
         if root_password:
@@ -32,7 +32,7 @@ def create_vps_container(container_name, image="ubuntu:22.04", cpu_cores=1, ram_
                 if res_b.returncode == 0:
                     set_pwd_success = True
 
-            # Method C: Direct shadow file edit / passwd pipe fallback
+            # Method C: Direct passwd pipe fallback
             if not set_pwd_success:
                 cmd_c = f"lxc-attach -n {container_name} -- passwd root <<EOF\n{root_password}\n{root_password}\nEOF"
                 res_c = subprocess.run(cmd_c, shell=True, capture_output=True, text=True)
