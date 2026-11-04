@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-trap 'echo "[Omega V4] ERROR at line $LINENO: $BASH_COMMAND" >&2' ERR
+trap 'echo "[Vizion V4] ERROR at line $LINENO: $BASH_COMMAND" >&2' ERR
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="${OMEGA_INSTALL_DIR:-/opt/omega-panel}"
@@ -17,7 +17,7 @@ for arg in "$@"; do
     --service-user=*) SERVICE_USER="${arg#*=}" ;;
     --help)
       cat <<EOF
-Omega Panel V4 Stable installer
+Vizion Panel V4 Stable installer
 
 Usage: sudo bash setup.sh [--noninteractive] [--with-lxd] [--node-only]
 
@@ -58,7 +58,7 @@ fi
 
 # KVM is a capability, not a promise: nested/unprivileged hosts can legitimately lack /dev/kvm.
 if command -v kvm-ok >/dev/null 2>&1; then
-  echo "[Omega V4] $(kvm-ok 2>&1 || true)"
+  echo "[Vizion V4] $(kvm-ok 2>&1 || true)"
 fi
 
 # Install/validate Incus without purging LXD/Incus packages. This avoids the V3 destructive conflict path.
@@ -91,12 +91,12 @@ fi
 if [[ "$WITH_LXD" -eq 1 ]]; then
   if ! command -v snap >/dev/null 2>&1 && command -v apt-get >/dev/null 2>&1; then install_apt snapd; systemctl enable --now snapd.socket 2>/dev/null || true; sleep 2; fi
   if command -v lxd >/dev/null 2>&1; then
-    echo "[Omega V4] LXD already present: $(lxd --version 2>/dev/null || true)"
+    echo "[Vizion V4] LXD already present: $(lxd --version 2>/dev/null || true)"
   elif command -v snap >/dev/null 2>&1; then
     snap install lxd
     lxd init --auto || true
   else
-    echo "[Omega V4] snap not found; LXD was not installed. Incus remains the supported primary backend."
+    echo "[Vizion V4] snap not found; LXD was not installed. Incus remains the supported primary backend."
   fi
 fi
 
@@ -149,7 +149,7 @@ migrate_nodes()
 conn = get_db()
 admin = conn.execute("SELECT id FROM users WHERE is_admin=1").fetchone()
 if admin:
-    print('[Omega V4] Existing admin account detected; no credentials changed.')
+    print('[Vizion V4] Existing admin account detected; no credentials changed.')
 else:
     username = os.environ.get('OMEGA_ADMIN_USER', 'admin')
     password = os.environ.get('OMEGA_ADMIN_PASSWORD') or 'admin'
@@ -164,11 +164,11 @@ else:
     with open(credentials_file, 'w', encoding='utf-8') as fh:
         fh.write(f"username: {username}\npassword: {password}\n")
     os.chmod(credentials_file, 0o600)
-    print(f"[Omega V4] First admin: {username}")
-    print(f"[Omega V4] Random password: {password}")
-    print(f"[Omega V4] Credentials file: {credentials_file}")
+    print(f"[Vizion V4] First admin: {username}")
+    print(f"[Vizion V4] Random password: {password}")
+    print(f"[Vizion V4] Credentials file: {credentials_file}")
     if password == 'admin':
-        print('[Omega V4] WARNING: default login is admin/admin. Change it after the first login.')
+        print('[Vizion V4] WARNING: default login is admin/admin. Change it after the first login.')
 
 local = conn.execute("SELECT id FROM nodes WHERE is_local=1 LIMIT 1").fetchone()
 if not local:
@@ -208,7 +208,7 @@ install -m 0644 "$INSTALL_DIR/systemd/omega-jobs.service" /etc/systemd/system/om
 if [[ -f "$INSTALL_DIR/bot_runner.py" ]]; then
 cat > /etc/systemd/system/omega-bot.service <<UNIT
 [Unit]
-Description=Omega Panel Discord bot and background workers
+Description=Vizion Panel Discord bot and background workers
 After=network-online.target incus.service omega-panel.service
 Wants=network-online.target
 
@@ -233,7 +233,7 @@ WantedBy=multi-user.target
 UNIT
 chmod 0644 /etc/systemd/system/omega-bot.service
 else
-  echo "[Omega] WARNING: bot_runner.py is missing, Discord bot service skipped. Push bot_runner.py to the repo and run --update." >&2
+  echo "[Vizion] WARNING: bot_runner.py is missing, Discord bot service skipped. Push bot_runner.py to the repo and run --update." >&2
 fi
 install -m 0644 "$INSTALL_DIR/systemd/omega-watchdog.service" /etc/systemd/system/omega-watchdog.service
 install -m 0644 "$INSTALL_DIR/systemd/omega-watchdog.timer" /etc/systemd/system/omega-watchdog.timer
@@ -253,7 +253,7 @@ systemctl enable --now omega-image-refresh.timer
 if [[ "$NODE_ONLY" -eq 0 ]]; then
   echo
   echo "=============================================="
-  echo " Omega Panel V4 Stable - installed"
+  echo " Vizion Panel V4 Stable - installed"
   echo " Hostname: ${OMEGA_HOSTNAME:-rgnodes-vps}"
   echo " Panel: http://127.0.0.1:${OMEGA_PORT:-5000}"
   echo " Login: admin / admin (change after the first login)"

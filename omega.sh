@@ -26,7 +26,7 @@ if [[ ! -f "$ROOT_DIR/setup.sh" ]]; then
     command -v curl >/dev/null 2>&1 || { echo "curl is required for the one-line installer." >&2; exit 1; }
     command -v tar >/dev/null 2>&1 || { echo "tar is required for the one-line installer." >&2; exit 1; }
     BOOT_DIR="$(mktemp -d)"
-    echo "Downloading Omega Panel (${REPO_SLUG}@${REPO_REF}) ..."
+    echo "Downloading Vizion Panel (${REPO_SLUG}@${REPO_REF}) ..."
     if ! curl -fsSL "$ARCHIVE_URL" | tar -xz -C "$BOOT_DIR" --strip-components=1; then
         echo "Download failed. Check the network or clone the repo manually." >&2
         exit 1
@@ -100,7 +100,7 @@ need_systemd() {
 install_panel() {
     need_root
     need_systemd
-    say "Installing Omega Panel from ${ROOT_DIR} ..."
+    say "Installing Vizion Panel from ${ROOT_DIR} ..."
     bash "$ROOT_DIR/setup.sh" "$@"
     ok "Install finished."
     echo
@@ -126,7 +126,7 @@ uninstall_panel() {
 node_connect() {
     need_systemd
     echo
-    echo "Connect this server as a node of an Omega panel."
+    echo "Connect this server as a node of a Vizion panel."
     echo "The enrollment key is on the panel: Admin -> Node Install / Uninstall."
     echo
     read -rp "Panel URL [http://127.0.0.1:${PANEL_PORT}]: " panel || true
@@ -209,7 +209,7 @@ restart_services() {
         local svc_user="omega-panel"; id "$svc_user" >/dev/null 2>&1 || svc_user="root"
         cat > /etc/systemd/system/omega-bot.service <<UNIT
 [Unit]
-Description=Omega Panel Discord bot and background workers
+Description=Vizion Panel Discord bot and background workers
 After=network-online.target incus.service omega-panel.service
 Wants=network-online.target
 

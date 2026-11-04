@@ -1,11 +1,11 @@
-# Omega Panel
+# Vizion Panel
 
 > Credit: **sartahk34** · **SKa** V4 Stable latest
 
 **Primary author:** MrZetrix  
 **Original project/reference credit:** NafiGamer — `nafigamer0`
 
-A clean-source rebuild of the uploaded Omega Panel V3 Incus package. V4 keeps the same core product concept—web VPS dashboard, users, admin controls, Incus, SSH/SSHX and node status—but removes the fragile obfuscated runtime and destructive setup behavior.
+A clean-source rebuild of the uploaded Vizion Panel V3 Incus package. V4 keeps the same core product concept—web VPS dashboard, users, admin controls, Incus, SSH/SSHX and node status—but removes the fragile obfuscated runtime and destructive setup behavior.
 
 ## What is included
 

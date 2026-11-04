@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Omega Panel V4 - RGNODES™ enhanced installer
+# Vizion Panel V4 - RGNODES™ enhanced installer
 # Primary author: MrZetrix
 # Original project/reference credit: NafiGamer (nafigamer0)
 #
-# Installs the public Omega-Panel-V4 repository, checks/chooses safe ports,
+# Installs the public Vizion-Panel-V4 repository, checks/chooses safe ports,
 # prepares the host, starts the existing setup.sh, verifies services, and
 # provides a small terminal UI for install/update/repair/status/uninstall.
 
@@ -323,7 +323,7 @@ health_check() {
 
 show_status() {
     echo
-    echo -e "${BOLD}${BLUE}Omega Panel V4 — RGNODES™ Status${RESET}"
+    echo -e "${BOLD}${BLUE}Vizion Panel V4 — RGNODES™ Status${RESET}"
     echo "------------------------------------------------------------"
     if [[ -r "$ENV_FILE" ]]; then
         grep -E '^(OMEGA_HOSTNAME|OMEGA_PORT|OMEGA_NODE_PORT|OMEGA_TIMEZONE)=' "$ENV_FILE" || true
@@ -391,7 +391,7 @@ install_or_update() {
     fi
 
     echo
-    ok "Omega Panel V4 installation/update completed."
+    ok "Vizion Panel V4 installation/update completed."
     echo "Panel: http://<SERVER-IP>:${PANEL_PORT}"
     echo "Node: 127.0.0.1:${NODE_PORT}"
     echo "Hostname: ${OMEGA_HOSTNAME}"
@@ -419,7 +419,7 @@ repair_install() {
 uninstall_panel() {
     require_root
     echo
-    warn "This removes Omega Panel services and application files."
+    warn "This removes Vizion Panel services and application files."
     warn "Database backups under ${BACKUP_ROOT} are preserved when available."
     local ans=""
     if [[ "${NONINTERACTIVE:-0}" -ne 1 ]]; then
@@ -453,7 +453,7 @@ menu() {
     clear || true
     echo -e "${BOLD}${CYAN}"
     echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║              OMEGA PANEL V4 • RGNODES™                   ║"
+    echo "║              VIZION PANEL V4 • RGNODES™                   ║"
     echo "║                 Stable Installer UI                      ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo -e "${RESET}"
@@ -493,7 +493,7 @@ for arg in "$@"; do
         --branch=*) BRANCH="${arg#*=}" ;;
         --help|-h)
             cat <<EOF
-Omega Panel V4 • RGNODES™ installer
+Vizion Panel V4 • RGNODES™ installer
 
 Usage:
   sudo bash install-omega-panel-v4.sh

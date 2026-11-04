@@ -537,7 +537,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
         {% else %}
         <img src="https://files.catbox.moe/wni5n4.png" alt="Icon" style="width:24px;height:24px;border-radius:6px;object-fit:contain;">
         {% endif %}
-        {{ settings.site_name if settings else 'Omega Panel' }}
+        {{ settings.site_name if settings else 'Vizion Panel' }}
     </a>
 
     <div class="sidebar-section">
@@ -654,7 +654,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
     {% endif %}
 
     <div class="sidebar-footer">
-        <div style="margin-bottom:4px;">{{ settings.footer_text if settings else 'Powered by Omega Panel' }}</div>
+        <div style="margin-bottom:4px;">{{ settings.footer_text if settings else 'Powered by Vizion Panel' }}</div>
         <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;">Created by <strong>FLOATIX</strong> · Credit: <strong>sartahk34</strong> · <strong>SKa</strong></div>
         <a href="/logout" style="color:var(--text-dim);text-decoration:none;font-size:11px;display:flex;align-items:center;gap:4px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -702,7 +702,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ settings.site_name if settings else 'Omega Panel' }}</title>
+    <title>{{ settings.site_name if settings else 'Vizion Panel' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -887,7 +887,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
                 {% else %}
                 <img src="https://files.catbox.moe/wni5n4.png" alt="Icon" style="width:32px;height:32px;border-radius:8px;object-fit:contain;animation:float 3s ease-in-out infinite;">
                 {% endif %}
-                <span style="font-size: 20px; font-weight: 700;">{{ settings.site_name if settings else 'Omega Panel' }}</span>
+                <span style="font-size: 20px; font-weight: 700;">{{ settings.site_name if settings else 'Vizion Panel' }}</span>
             </div>
             <div style="display: flex; justify-content: center; margin-bottom: 32px;">
                 <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 100px; font-size: 12px; color: var(--text-muted);">
@@ -989,7 +989,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
         </div>
 
         <div class="footer-bar">
-            <span>{{ settings.footer_text if settings else 'Omega Panel' }} &mdash; Created by <strong>FLOATIX</strong> · Credit: <strong>sartahk34</strong> · <strong>SKa</strong></span>
+            <span>{{ settings.footer_text if settings else 'Vizion Panel' }} &mdash; Created by <strong>FLOATIX</strong> · Credit: <strong>sartahk34</strong> · <strong>SKa</strong></span>
             <span style="display: flex; gap: 16px;">
                 <a href="/login" style="color: var(--text-dim); text-decoration: none;">Login</a>
                 <a href="/register" style="color: var(--text-dim); text-decoration: none;">Register</a>
@@ -1005,7 +1005,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign in — {{ settings.site_name if settings else 'Omega Panel' }}</title>
+    <title>Sign in — {{ settings.site_name if settings else 'Vizion Panel' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -1214,7 +1214,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
                     </div>
                 </div>
                 <h1>Welcome back</h1>
-                <p>Sign in to your {{ settings.site_name if settings else 'Omega Panel' }} account</p>
+                <p>Sign in to your {{ settings.site_name if settings else 'Vizion Panel' }} account</p>
             </div>
 
             <div class="auth-card">
@@ -1262,7 +1262,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create account — {{ settings.site_name if settings else 'Omega Panel' }}</title>
+    <title>Create account — {{ settings.site_name if settings else 'Vizion Panel' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -1477,7 +1477,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
                     </div>
                 </div>
                 <h1>Create account</h1>
-                <p>Get started with {{ settings.site_name if settings else 'Omega Panel' }}</p>
+                <p>Get started with {{ settings.site_name if settings else 'Vizion Panel' }}</p>
             </div>
 
             <div class="auth-card">
@@ -1543,7 +1543,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — {{ settings.site_name if settings else 'Omega Panel' }}</title>
+    <title>Dashboard — {{ settings.site_name if settings else 'Vizion Panel' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -2255,7 +2255,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin — {{ settings.site_name if settings else 'Omega Panel' }}</title>
+    <title>Admin — {{ settings.site_name if settings else 'Vizion Panel' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -2689,7 +2689,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ vps['container_name'] }} — Omega Panel</title>
+    <title>{{ vps['container_name'] }} — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -3207,7 +3207,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ vps['container_name'] }} — Omega Panel</title>
+    <title>{{ vps['container_name'] }} — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -3823,7 +3823,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All VPS — Omega Panel</title>
+    <title>All VPS — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -4053,7 +4053,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile — Omega Panel</title>
+    <title>My Profile — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -4251,7 +4251,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Port Forwarding — Omega Panel</title>
+    <title>Port Forwarding — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -4512,7 +4512,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Settings — Omega Panel</title>
+    <title>Panel Settings — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -4774,7 +4774,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Node Management — Omega Panel</title>
+    <title>Node Management — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -5052,7 +5052,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Logs — Omega Panel</title>
+    <title>System Logs — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -5295,7 +5295,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Users — Omega Panel</title>
+    <title>Users — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -5842,7 +5842,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notifications — Omega Panel</title>
+    <title>Notifications — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -5973,7 +5973,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omega Panel</title>
+    <title>Vizion Panel</title>
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
@@ -6062,7 +6062,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omega Panel</title>
+    <title>Vizion Panel</title>
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
@@ -6143,7 +6143,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omega Panel</title>
+    <title>Vizion Panel</title>
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
@@ -6257,7 +6257,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Info — Omega Panel</title>
+    <title>System Info — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -6462,7 +6462,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OS Icons — Omega Panel</title>
+    <title>OS Icons — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
 </head>
@@ -6536,7 +6536,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Docs — Omega Panel</title>
+    <title>API Docs — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -6615,7 +6615,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
                 <div class="page-header fade-in">
                     <div>
                         <h1>API Documentation</h1>
-                        <p class="page-header-sub">REST API endpoints for Omega Panel. All endpoints require session auth (login) except public ones.</p>
+                        <p class="page-header-sub">REST API endpoints for Vizion Panel. All endpoints require session auth (login) except public ones.</p>
                     </div>
                 </div>
 
@@ -7492,7 +7492,7 @@ ubuntu-26.04    # Ubuntu 26.04</div>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Usage Report — Omega Panel</title>
+    <title>User Usage Report — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -7701,7 +7701,7 @@ ubuntu-26.04    # Ubuntu 26.04</div>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expiring VPS — Omega Panel</title>
+    <title>Expiring VPS — Vizion Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ custom_icon if custom_icon else 'https://files.catbox.moe/wni5n4.png' }}">
     <style>
@@ -9423,9 +9423,9 @@ def init_db():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS settings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            site_name TEXT DEFAULT 'Omega Panel',
+            site_name TEXT DEFAULT 'Vizion Panel',
             site_description TEXT DEFAULT 'High-Performance VPS Management Panel',
-            footer_text TEXT DEFAULT 'Powered by Omega Panel',
+            footer_text TEXT DEFAULT 'Powered by Vizion Panel',
             timezone TEXT DEFAULT 'Asia/Kolkata',
             registration_enabled INTEGER DEFAULT 1,
             logo_url TEXT DEFAULT '/static/img/logo.png',
@@ -12674,7 +12674,7 @@ def admin_expiring():
     return render_template('expiring_vps.html', vps_list=expiring)
 
 # ---------------------------------------------------------------------------
-# Omega-Panel integrations: email verification, Discord OAuth, Bot API, banner
+# Vizion-Panel integrations: email verification, Discord OAuth, Bot API, banner
 # ---------------------------------------------------------------------------
 import hmac
 import smtplib
@@ -12804,8 +12804,8 @@ def _register_with_email_otp():
             )
             conn.commit()
             try:
-                _send_email(email, "Omega Panel email verification",
-                            f"Your Omega Panel verification code is: {otp}\n\nThis code expires in 10 minutes. If you did not request this, ignore this email.")
+                _send_email(email, "Vizion Panel email verification",
+                            f"Your Vizion Panel verification code is: {otp}\n\nThis code expires in 10 minutes. If you did not request this, ignore this email.")
             except Exception:
                 conn.execute("DELETE FROM pending_registrations WHERE id=?", (cur.lastrowid,))
                 conn.commit()
@@ -13374,7 +13374,7 @@ app.view_functions["admin_create_vps"] = limiter.limit(lambda: get_rate_limit("h
 
 EMBEDDED_TEMPLATES["verify_email.html"] = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Verify email - Omega Panel</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<title>Verify email - Vizion Panel</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
 <body><main class="page" style="max-width:440px;margin:8vh auto;padding:24px">
 <h1>Verify your email</h1><p>Enter the six-digit code sent to your email address. It expires in 10 minutes.</p>
 <form method="post"><input class="form-control" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
@@ -13591,7 +13591,7 @@ def admin_smtp_test():
     if not _smtp_is_configured():
         return jsonify({"success": False, "error": "SMTP environment variables are not configured"}), 400
     try:
-        _send_email(user["email"], "Omega Panel SMTP test", "SMTP is configured correctly.")
+        _send_email(user["email"], "Vizion Panel SMTP test", "SMTP is configured correctly.")
         return jsonify({"success": True})
     except Exception as exc:
         app.logger.exception("SMTP test failed")
@@ -13601,7 +13601,7 @@ def admin_smtp_test():
 # replace it with a styled templates/bot_settings.html file at any time.
 EMBEDDED_TEMPLATES["bot_settings.html"] = """<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bot Settings - Omega Panel</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<title>Bot Settings - Vizion Panel</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
 <body><main class="page" style="max-width:760px;margin:5vh auto;padding:24px">
 <h1>Bot Settings</h1><p>Configure the companion bot and panel banner.</p>
 <form method="post" enctype="multipart/form-data">
@@ -13617,7 +13617,7 @@ EMBEDDED_TEMPLATES["bot_settings.html"] = """<!doctype html><html lang="en"><hea
 
 
 # =============================================================================
-# Omega-Panel unified integrations: DB-backed SMTP/OAuth/Turnstile/Discord/health
+# Vizion-Panel unified integrations: DB-backed SMTP/OAuth/Turnstile/Discord/health
 # All optional dependencies are imported lazily so the panel can still boot.
 # =============================================================================
 import html as _html
@@ -13696,13 +13696,13 @@ def _omega_smtp_ready(s=None):
 def _omega_render_email(context, subject=None):
     from flask import render_template_string
     s = _omega_settings_dict()
-    default_subject = subject or "Omega Panel notification"
+    default_subject = subject or "Vizion Panel notification"
     subject_tpl = s.get("email_subject_template") or default_subject
     body_tpl = s.get("email_html_template") or """<div style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;background:#101827;color:#edf2f7;border-radius:14px'>
-<h2 style='color:#65d6ff'>Omega Panel</h2><p>Hello {{ username|e }},</p><p>{{ message|e }}</p>
+<h2 style='color:#65d6ff'>Vizion Panel</h2><p>Hello {{ username|e }},</p><p>{{ message|e }}</p>
 {% if vps_name %}<div style='padding:16px;background:#1b293b;border-radius:10px'><b>VPS:</b> {{ vps_name|e }}<br><b>Username:</b> {{ vps_username|e }}<br><b>Password:</b> {{ vps_password|e }}<br><b>OS:</b> {{ os_type|e }}<br><b>RAM:</b> {{ ram|e }}<br><b>CPU:</b> {{ cpu|e }}<br><b>Storage:</b> {{ disk|e }}</div>{% endif %}
 {% if otp %}<h1 style='letter-spacing:8px'>{{ otp|e }}</h1><p>This code expires in 10 minutes.</p>{% endif %}
-{% if panel_link %}<p><a style='color:#65d6ff' href='{{ panel_link|e }}'>Open Omega Panel</a></p>{% endif %}<p style='color:#9aa8b8;font-size:12px'>If you did not request this email, you can ignore it.</p></div>"""
+{% if panel_link %}<p><a style='color:#65d6ff' href='{{ panel_link|e }}'>Open Vizion Panel</a></p>{% endif %}<p style='color:#9aa8b8;font-size:12px'>If you did not request this email, you can ignore it.</p></div>"""
     safe_context = {k: ("" if v is None else str(v)) for k, v in context.items()}
     return render_template_string(subject_tpl, **safe_context), render_template_string(body_tpl, **safe_context)
 
@@ -13837,7 +13837,7 @@ def omega_login():
                                    (user["id"], hashlib.sha256(otp.encode()).hexdigest(), int(time.time()) + 600))
                 conn.commit(); conn.close()
                 try:
-                    _omega_send_email(user["email"], "Omega Panel login verification",
+                    _omega_send_email(user["email"], "Vizion Panel login verification",
                                       f"Your login verification code is {otp}. It expires in 10 minutes.",
                                       {"username": user["username"], "message": "Use this code to complete your sign-in.", "otp": otp})
                 except Exception:
@@ -14041,8 +14041,8 @@ def omega_integrations_settings():
     return render_template_string(OMEGA_INTEGRATIONS_HTML, settings=s)
 
 
-OMEGA_INTEGRATIONS_HTML = r'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Omega integrations</title>
-<style>body{margin:0;background:#0b1220;color:#e7edf5;font:14px system-ui}main{max-width:1000px;margin:32px auto;padding:20px}.card{background:#121d2d;border:1px solid #26364a;border-radius:14px;padding:20px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}label{display:block;margin:10px 0 5px;color:#b7c5d6}input,textarea{box-sizing:border-box;width:100%;padding:10px;background:#0b1422;border:1px solid #34465d;border-radius:8px;color:#fff}textarea{min-height:130px}button{padding:11px 18px;border:0;border-radius:8px;background:#46b5e8;color:#07111b;font-weight:700;cursor:pointer}.hint{color:#9fb0c4;font-size:12px}.check{display:flex;gap:8px;align-items:center}.check input{width:auto}</style></head><body><main><h1>Omega Panel · Integrations & Monitoring</h1><p><a href="/admin/env-editor" style="color:#6ccfff">Open Discord .env editor →</a></p><p class="hint">All values below are saved in the panel SQLite database. Leave secret fields blank to keep the existing secret.</p>
+OMEGA_INTEGRATIONS_HTML = r'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vizion integrations</title>
+<style>body{margin:0;background:#0b1220;color:#e7edf5;font:14px system-ui}main{max-width:1000px;margin:32px auto;padding:20px}.card{background:#121d2d;border:1px solid #26364a;border-radius:14px;padding:20px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}label{display:block;margin:10px 0 5px;color:#b7c5d6}input,textarea{box-sizing:border-box;width:100%;padding:10px;background:#0b1422;border:1px solid #34465d;border-radius:8px;color:#fff}textarea{min-height:130px}button{padding:11px 18px;border:0;border-radius:8px;background:#46b5e8;color:#07111b;font-weight:700;cursor:pointer}.hint{color:#9fb0c4;font-size:12px}.check{display:flex;gap:8px;align-items:center}.check input{width:auto}</style></head><body><main><h1>Vizion Panel · Integrations & Monitoring</h1><p><a href="/admin/env-editor" style="color:#6ccfff">Open Discord .env editor →</a></p><p class="hint">All values below are saved in the panel SQLite database. Leave secret fields blank to keep the existing secret.</p>
 <form method="post" enctype="multipart/form-data">
 <section class="card"><h2>SMTP & HTML email template</h2><div class="grid">
 <div><label>SMTP Host</label><input name="smtp_host" value="{{settings.smtp_host}}"><label>SMTP Port</label><input type="number" name="smtp_port" value="{{settings.smtp_port or 587}}"></div>
@@ -14066,7 +14066,7 @@ def omega_health_dashboard():
     rows = conn.execute("SELECT * FROM omega_health_checks ORDER BY id DESC LIMIT 100").fetchall()
     nodes = conn.execute("SELECT id,name,is_local,status FROM nodes ORDER BY is_local DESC,id").fetchall()
     conn.close()
-    return render_template_string("""<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><title>Node health</title><style>body{background:#0b1220;color:#edf2f7;font:14px system-ui;padding:24px}table{width:100%;border-collapse:collapse}td,th{padding:9px;border-bottom:1px solid #29394d;text-align:left}.ok{color:#42d39a}.bad{color:#ff7777}</style></head><body><h1>Omega health monitoring</h1><p>Configured check interval: {{interval}} seconds · <a href='/admin/integrations'>Settings</a></p><h2>Current nodes</h2><table><tr><th>Node</th><th>Type</th><th>State</th></tr>{% for n in nodes %}<tr><td>{{n.name}}</td><td>{{'Local' if n.is_local else 'Remote'}}</td><td>{{n.status}}</td></tr>{% endfor %}</table><h2>Recent checks</h2><table><tr><th>Time</th><th>Node</th><th>Status</th><th>Latency</th><th>Details</th></tr>{% for r in rows %}<tr><td>{{r.checked_at}}</td><td>{{r.node_name}}</td><td class='{{'ok' if r.status == 'online' else 'bad'}}'>{{r.status}}</td><td>{{'%.0f ms'|format(r.latency_ms) if r.latency_ms is not none else '—'}}</td><td>{{r.details}}</td></tr>{% endfor %}</table></body></html>""", rows=rows, nodes=nodes, interval=_omega_settings_dict().get("health_interval_seconds", 86400))
+    return render_template_string("""<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><title>Node health</title><style>body{background:#0b1220;color:#edf2f7;font:14px system-ui;padding:24px}table{width:100%;border-collapse:collapse}td,th{padding:9px;border-bottom:1px solid #29394d;text-align:left}.ok{color:#42d39a}.bad{color:#ff7777}</style></head><body><h1>Vizion health monitoring</h1><p>Configured check interval: {{interval}} seconds · <a href='/admin/integrations'>Settings</a></p><h2>Current nodes</h2><table><tr><th>Node</th><th>Type</th><th>State</th></tr>{% for n in nodes %}<tr><td>{{n.name}}</td><td>{{'Local' if n.is_local else 'Remote'}}</td><td>{{n.status}}</td></tr>{% endfor %}</table><h2>Recent checks</h2><table><tr><th>Time</th><th>Node</th><th>Status</th><th>Latency</th><th>Details</th></tr>{% for r in rows %}<tr><td>{{r.checked_at}}</td><td>{{r.node_name}}</td><td class='{{'ok' if r.status == 'online' else 'bad'}}'>{{r.status}}</td><td>{{'%.0f ms'|format(r.latency_ms) if r.latency_ms is not none else '—'}}</td><td>{{r.details}}</td></tr>{% endfor %}</table></body></html>""", rows=rows, nodes=nodes, interval=_omega_settings_dict().get("health_interval_seconds", 86400))
 
 
 def omega_check_health_once():
@@ -14079,7 +14079,7 @@ def omega_check_health_once():
                          f"Disk {psutil.disk_usage(app.root_path).percent:.1f}%")
     except Exception as exc:
         panel_status, panel_details = "offline", str(exc)[:250]
-    conn.execute("INSERT INTO omega_health_checks(node_id,node_name,is_local,status,latency_ms,details) VALUES(NULL,'Omega Panel',1,?,?,?)",
+    conn.execute("INSERT INTO omega_health_checks(node_id,node_name,is_local,status,latency_ms,details) VALUES(NULL,'Vizion Panel',1,?,?,?)",
                  (panel_status, 0.0, panel_details))
     conn.commit(); conn.close()
     results = [(None, panel_status, 0.0, panel_details)]
@@ -14146,7 +14146,7 @@ def omega_health_worker():
                             (alert_id, json.dumps({"type":"health_alert","node":node["name"],"details":details})))
                 conn.commit(); conn.close()
         except Exception:
-            app.logger.exception("Omega health worker cycle failed")
+            app.logger.exception("Vizion health worker cycle failed")
         interval = int(_omega_settings_dict().get("health_interval_seconds") or 86400)
         interval = max(30, min(86400, interval))
         OMEGA_HEALTH_STOP.wait(interval)
@@ -14591,7 +14591,7 @@ def _omega_oauth_user(provider, profile):
     return _original_omega_oauth_user(provider, profile)
 
 # -----------------------------------------------------------------------------
-# Omega Panel reliability patch: live Incus image inventory, dashboard defaults,
+# Vizion Panel reliability patch: live Incus image inventory, dashboard defaults,
 # premium health UI and Discord status command support.
 # -----------------------------------------------------------------------------
 OMEGA_PROCESS_STARTED_AT = time.time()
@@ -14866,7 +14866,7 @@ def _os_image_alias(os_type):
 # Premium health dashboard. This same HTML is also supplied as status_page.html.
 OMEGA_HEALTH_PAGE_HTML = r'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Omega Status · FLOATIX</title>
+<title>Vizion Status · FLOATIX</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -14878,7 +14878,7 @@ OMEGA_HEALTH_PAGE_HTML = r'''<!doctype html>
 .table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:700px}th{text-align:left;color:#8ea2bc;font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:12px;border-bottom:1px solid var(--line)}td{padding:13px 12px;border-bottom:1px solid rgba(148,163,184,.09);font-size:12px;color:#dce8f7}tbody tr:hover{background:rgba(72,215,255,.035)}.muted{color:var(--muted)}.foot{text-align:center;color:#63738d;font-size:11px;padding:24px 0 5px}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top{align-items:flex-start;flex-direction:column}}@media(max-width:480px){body{padding:22px 13px}.grid{gap:9px}.metric{padding:14px}.metric .value{font-size:23px}}
 </style></head><body><main class="shell">
-<header class="top"><div><div class="eyebrow">FLOATIX · INFRASTRUCTURE</div><h1>System Status</h1><p class="sub">Live health overview for Omega Panel and connected nodes.</p></div><div class="actions"><a class="btn" href="/admin/integrations">Settings</a><a class="btn" href="/admin/health">Refresh status ↗</a></div></header>
+<header class="top"><div><div class="eyebrow">FLOATIX · INFRASTRUCTURE</div><h1>System Status</h1><p class="sub">Live health overview for Vizion Panel and connected nodes.</p></div><div class="actions"><a class="btn" href="/admin/integrations">Settings</a><a class="btn" href="/admin/health">Refresh status ↗</a></div></header>
 <section class="grid">
 <div class="glass metric"><div class="label">Panel status</div><div class="value {{ 'online' if panel_status == 'online' else 'offline' if panel_status == 'offline' else 'unknown' }}"><span class="dot"></span>{{ panel_status|upper }}</div><div class="hint">Application and database</div></div>
 <div class="glass metric"><div class="label">Online nodes</div><div class="value">{{ online_nodes }} / {{ nodes|length }}</div><div class="hint">Connected compute nodes</div></div>
@@ -14890,7 +14890,7 @@ OMEGA_HEALTH_PAGE_HTML = r'''<!doctype html>
 </div></section>
 <section class="glass section"><div class="section-head"><h2>Recent health checks</h2><span class="pill">Latest 100 records</span></div><div class="table-wrap"><table><thead><tr><th>Timestamp</th><th>Component</th><th>Status</th><th>Latency</th><th>Details</th></tr></thead><tbody>
 {% for r in rows %}<tr><td>{{ r.checked_at }}</td><td>{{ r.node_name }}</td><td class="{{ 'online' if r.status == 'online' else 'offline' }}"><span class="dot"></span>{{ r.status|upper }}</td><td>{{ '%.0f ms'|format(r.latency_ms) if r.latency_ms is not none else '—' }}</td><td class="muted">{{ r.details }}</td></tr>{% else %}<tr><td colspan="5" class="muted">No health checks recorded yet. The monitor will populate this table after its first run.</td></tr>{% endfor %}
-</tbody></table></div></section><footer class="foot">Omega Panel · Credit: sartahk34 · SKa</footer></main><script>setTimeout(()=>location.reload(),30000);</script></body></html>'''
+</tbody></table></div></section><footer class="foot">Vizion Panel · Credit: sartahk34 · SKa</footer></main><script>setTimeout(()=>location.reload(),30000);</script></body></html>'''
 
 
 def _omega_format_uptime(seconds):
@@ -14929,7 +14929,7 @@ def omega_health_dashboard_premium():
                 "status": local_check["status"],
                 "latency": round(local_check["latency_ms"]) if local_check["latency_ms"] is not None else None,
                 "details": local_check["details"]})
-    panel_check = next((r for r in latest if r["node_name"] == "Omega Panel"), None)
+    panel_check = next((r for r in latest if r["node_name"] in ("Vizion Panel", "Omega Panel")), None)
     panel_status = panel_check["status"] if panel_check else "unknown"
     online_nodes = sum(1 for n in nodes if n["status"] == "online")
     offline_nodes = sum(1 for n in nodes if n["status"] == "offline")
@@ -14985,7 +14985,7 @@ app.view_functions["dashboard"] = dashboard_hardened
 
 
 # Dynamic dropdown: changing the selected node fetches only that node's live aliases.
-EMBEDDED_TEMPLATES["os_icons.html"] = r'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Available OS Images · Omega Panel</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"><style>.os-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.os-card{background:rgba(18,27,45,.72);border:1px solid var(--border);border-radius:15px;padding:20px;text-align:center}.os-icon{font-size:42px;margin-bottom:12px}.os-alias{font:11px monospace;color:var(--text-dim);overflow-wrap:anywhere}.os-empty{padding:32px;text-align:center;color:var(--text-dim);border:1px dashed var(--border);border-radius:14px}</style></head><body>{% include 'icons.html' %}{% from 'components.html' import sidebar, topbar, overlay %}<div class="app-layout">{{ sidebar('osicons', settings, custom_icon) }}<div class="main-content">{{ topbar('OS Images', 'osicons') }}<div class="page"><div class="page-header"><div><h1>Available OS Images</h1><p class="page-header-sub">Live inventory fetched from your connected Incus/LXD nodes. Deleted images disappear after refresh.</p></div><button class="btn btn-ghost" onclick="location.reload()">Refresh inventory</button></div><div class="os-grid">{% for image in os_images %}<article class="os-card"><div class="os-icon">{{ image.icon }}</div><h3>{{ image.label }}</h3><p class="os-alias">{{ image.alias }}</p><p class="text-dim" style="font-size:11px">{{ image.family|upper }} · {{ image.nodes|join(', ') }}</p><span class="status status-running">Available now</span></article>{% else %}<div class="os-empty">No images are currently available from the configured nodes. Install or import an image on a node, then refresh this page.</div>{% endfor %}</div></div></div></div>{{ overlay() }}<script src="{{ url_for('static', filename='js/main.js') }}"></script></body></html>'''
+EMBEDDED_TEMPLATES["os_icons.html"] = r'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Available OS Images · Vizion Panel</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"><style>.os-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.os-card{background:rgba(18,27,45,.72);border:1px solid var(--border);border-radius:15px;padding:20px;text-align:center}.os-icon{font-size:42px;margin-bottom:12px}.os-alias{font:11px monospace;color:var(--text-dim);overflow-wrap:anywhere}.os-empty{padding:32px;text-align:center;color:var(--text-dim);border:1px dashed var(--border);border-radius:14px}</style></head><body>{% include 'icons.html' %}{% from 'components.html' import sidebar, topbar, overlay %}<div class="app-layout">{{ sidebar('osicons', settings, custom_icon) }}<div class="main-content">{{ topbar('OS Images', 'osicons') }}<div class="page"><div class="page-header"><div><h1>Available OS Images</h1><p class="page-header-sub">Live inventory fetched from your connected Incus/LXD nodes. Deleted images disappear after refresh.</p></div><button class="btn btn-ghost" onclick="location.reload()">Refresh inventory</button></div><div class="os-grid">{% for image in os_images %}<article class="os-card"><div class="os-icon">{{ image.icon }}</div><h3>{{ image.label }}</h3><p class="os-alias">{{ image.alias }}</p><p class="text-dim" style="font-size:11px">{{ image.family|upper }} · {{ image.nodes|join(', ') }}</p><span class="status status-running">Available now</span></article>{% else %}<div class="os-empty">No images are currently available from the configured nodes. Install or import an image on a node, then refresh this page.</div>{% endfor %}</div></div></div></div>{{ overlay() }}<script src="{{ url_for('static', filename='js/main.js') }}"></script></body></html>'''
 
 # Make Jinja's DictLoader see the replacement template.
 try:
@@ -14999,7 +14999,7 @@ except Exception:
 
 
 # =============================================================================
-# Omega Discord bot v2: owner/shared-user controls, admin command separation,
+# Vizion Discord bot v2: owner/shared-user controls, admin command separation,
 # dropdown navigation, persistent status channel and database-backed emojis.
 # =============================================================================
 import asyncio as _omega_asyncio
@@ -15231,9 +15231,9 @@ def _omega_bot_status_snapshot(bot_latency_ms=0):
         cfg = conn.execute("SELECT * FROM omega_bot_status_config WHERE id=1").fetchone()
     finally:
         conn.close()
-    panel = next((r for r in rows if r["node_name"] == "Omega Panel"), None)
+    panel = next((r for r in rows if r["node_name"] in ("Vizion Panel", "Omega Panel")), None)
     panel_state = (panel["status"] if panel else "unknown").upper()
-    nodes = [r for r in rows if r["node_name"] != "Omega Panel"]
+    nodes = [r for r in rows if r["node_name"] not in ("Vizion Panel", "Omega Panel")]
     elapsed = max(0, int(time.time() - OMEGA_PROCESS_STARTED_AT))
     d, rem = divmod(elapsed, 86400); h, rem = divmod(rem, 3600); m, sec = divmod(rem, 60)
     return {"panel": panel_state, "nodes": nodes, "bot_latency": int(bot_latency_ms),
@@ -15650,7 +15650,7 @@ async def _omega_bot_start_async(token):
                 embed.add_field(name="More nodes", value=f"{len(nodes) - 24} additional nodes omitted due to Discord embed limits.", inline=False)
         if banner.startswith(("https://", "http://")):
             embed.set_image(url=banner)
-        embed.set_footer(text="LIVE MONITOR  •  Omega Panel", icon_url=None)
+        embed.set_footer(text="LIVE MONITOR  •  Vizion Panel", icon_url=None)
         return embed
 
     @tree.command(name="add_admin", description="Add a Discord user to the bot admin allow-list")

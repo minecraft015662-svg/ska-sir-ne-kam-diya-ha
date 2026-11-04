@@ -1,4 +1,4 @@
-"""Background workers for Omega/Vizion Panel (Discord bot, health monitor,
+"""Background workers for Vizion/Vizion Panel (Discord bot, health monitor,
 expiration + schedule workers).
 
 The web panel runs under gunicorn (``app:app``), so the ``if __name__ ==
@@ -37,7 +37,7 @@ def main():
     threading.Thread(target=panel.check_expirations, name="omega-expiration-worker", daemon=True).start()
     threading.Thread(target=_schedule_loop, name="omega-schedule-worker", daemon=True).start()
     panel.omega_start_background_workers()
-    print("[Omega bot] workers started (Discord bot, health monitor, schedules, expirations)", flush=True)
+    print("[Vizion bot] workers started (Discord bot, health monitor, schedules, expirations)", flush=True)
     try:
         while True:
             time.sleep(3600)

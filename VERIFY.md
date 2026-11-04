@@ -1,4 +1,4 @@
-# Omega Panel V4 Stable verification
+# Vizion Panel V4 Stable verification
 
 This release was rebuilt from the uploaded V3 archive as clean, maintainable Python/Flask source.
 The original V3 obfuscated `app.py` and `node.py` are preserved under `legacy_v3/` and are not executed.
