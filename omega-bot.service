@@ -1,5 +1,5 @@
 [Unit]
-Description=Omega Panel Discord bot and background workers
+Description=Vizion Panel Discord bot and background workers
 After=network-online.target incus.service omega-panel.service
 Wants=network-online.target
 
