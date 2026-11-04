@@ -2330,7 +2330,7 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
 
         .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
         .modal-bg.active { display: flex; }
-        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 420px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,.5); }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 420px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,.5); max-height: calc(100vh - 40px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .modal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
         .modal-top h2 { font-size: 15px; font-weight: 600; }
         .modal-x { background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: pointer; padding: 4px; line-height: 1; border-radius: 4px; }
@@ -8569,6 +8569,9 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     max-width: 420px;
     padding: 24px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-top {
