@@ -287,6 +287,9 @@ def remove(name: str, vps_type: str) -> tuple[bool, str]:
     if not binary:
         return False, "Incus/LXD CLI is not installed on this node."
     code, output = _run([binary, "delete", name, "--force"], timeout=300)
+    if code != 0 and "not found" in output.lower():
+        # Already gone (for example after an earlier failed backend switch).
+        return True, "Instance was already removed."
     return code == 0, output[-800:]
 
 
