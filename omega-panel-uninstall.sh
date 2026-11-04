@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Omega Panel - uninstall the panel services.
+# Vizion Panel - uninstall the panel services.
 #
 #   sudo bash scripts/omega-panel-uninstall.sh           # services only, keep data
 #   sudo bash scripts/omega-panel-uninstall.sh --purge   # also delete code/database/config
