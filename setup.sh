@@ -203,7 +203,38 @@ chmod 0640 /etc/omega-panel/omega.env
 install -m 0644 "$INSTALL_DIR/systemd/omega-panel.service" /etc/systemd/system/omega-panel.service
 install -m 0644 "$INSTALL_DIR/systemd/omega-node.service" /etc/systemd/system/omega-node.service
 install -m 0644 "$INSTALL_DIR/systemd/omega-jobs.service" /etc/systemd/system/omega-jobs.service
-install -m 0644 "$INSTALL_DIR/systemd/omega-bot.service" /etc/systemd/system/omega-bot.service
+# Discord bot + background workers. The unit is written inline so a missing
+# systemd/omega-bot.service file in the checkout can never abort the install.
+if [[ -f "$INSTALL_DIR/bot_runner.py" ]]; then
+cat > /etc/systemd/system/omega-bot.service <<UNIT
+[Unit]
+Description=Omega Panel Discord bot and background workers
+After=network-online.target incus.service omega-panel.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=${SERVICE_USER}
+Group=${SERVICE_USER}
+WorkingDirectory=${INSTALL_DIR}
+Environment=PYTHONPATH=${INSTALL_DIR}
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/omega-panel/omega.env
+ExecStart=${INSTALL_DIR}/venv/bin/python ${INSTALL_DIR}/bot_runner.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/omega-panel /etc/omega-panel
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+chmod 0644 /etc/systemd/system/omega-bot.service
+else
+  echo "[Omega] WARNING: bot_runner.py is missing, Discord bot service skipped. Push bot_runner.py to the repo and run --update." >&2
+fi
 install -m 0644 "$INSTALL_DIR/systemd/omega-watchdog.service" /etc/systemd/system/omega-watchdog.service
 install -m 0644 "$INSTALL_DIR/systemd/omega-watchdog.timer" /etc/systemd/system/omega-watchdog.timer
 install -m 0644 "$INSTALL_DIR/systemd/omega-image-refresh.service" /etc/systemd/system/omega-image-refresh.service
@@ -212,8 +243,10 @@ systemctl daemon-reload
 systemctl enable --now omega-panel.service
 systemctl enable --now omega-node.service
 systemctl enable --now omega-jobs.service
-systemctl enable omega-bot.service
-systemctl restart omega-bot.service || true
+if [[ -f /etc/systemd/system/omega-bot.service ]]; then
+  systemctl enable omega-bot.service || true
+  systemctl restart omega-bot.service || true
+fi
 systemctl enable --now omega-watchdog.timer
 systemctl enable --now omega-image-refresh.timer
 

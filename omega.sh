@@ -205,8 +205,33 @@ fetch_latest() {   # downloads latest code into $1
 
 restart_services() {
     # Make sure the Discord bot / background worker unit exists (added in newer versions).
-    if [[ -f "$INSTALL_DIR/systemd/omega-bot.service" && ! -f /etc/systemd/system/omega-bot.service ]]; then
-        install -m 0644 "$INSTALL_DIR/systemd/omega-bot.service" /etc/systemd/system/omega-bot.service
+    if [[ -f "$INSTALL_DIR/bot_runner.py" && ! -f /etc/systemd/system/omega-bot.service ]]; then
+        local svc_user="omega-panel"; id "$svc_user" >/dev/null 2>&1 || svc_user="root"
+        cat > /etc/systemd/system/omega-bot.service <<UNIT
+[Unit]
+Description=Omega Panel Discord bot and background workers
+After=network-online.target incus.service omega-panel.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=${svc_user}
+Group=${svc_user}
+WorkingDirectory=${INSTALL_DIR}
+Environment=PYTHONPATH=${INSTALL_DIR}
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/omega-panel/omega.env
+ExecStart=${INSTALL_DIR}/venv/bin/python ${INSTALL_DIR}/bot_runner.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/omega-panel /etc/omega-panel
+
+[Install]
+WantedBy=multi-user.target
+UNIT
         systemctl daemon-reload 2>/dev/null || true
         systemctl enable omega-bot.service >/dev/null 2>&1 || true
     fi
