@@ -73,21 +73,67 @@ def strip_ansi(text):
 app = Flask(__name__)
 
 KEY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.node_api_key')
-if 'NODE_API_KEY' in os.environ:
-    API_KEY = os.environ['NODE_API_KEY']
-elif os.path.exists(KEY_FILE):
-    with open(KEY_FILE) as f:
-        API_KEY = f.read().strip()
-else:
-    API_KEY = secrets.token_hex(32)
+# The panel is given the token stored in this file by scripts/omega-node-connect.sh,
+# so the agent MUST authenticate with the very same value, otherwise every
+# authenticated call (VPS create/start/stop...) answers 401 Unauthorized.
+TOKEN_FILE = os.environ.get('OMEGA_NODE_TOKEN_FILE', '/etc/omega-panel/node-token')
+NODE_TYPE_FILE = os.environ.get('OMEGA_NODE_TYPE_FILE', '/etc/omega-panel/node-type')
+
+
+def _load_api_key():
+    env_key = os.environ.get('NODE_API_KEY', '').strip()
+    if env_key:
+        return env_key
+    for path in (TOKEN_FILE, KEY_FILE):
+        try:
+            with open(path) as fh:
+                value = fh.read().strip()
+            if value:
+                return value
+        except OSError:
+            continue
+    generated = secrets.token_hex(32)
     try:
-        with open(KEY_FILE, 'w') as f:
-            f.write(API_KEY)
+        with open(KEY_FILE, 'w') as fh:
+            fh.write(generated)
     except Exception:
         pass
+    return generated
+
+
+API_KEY = _load_api_key()
+
+
+def node_type():
+    """lxc | kvm | incus (set by scripts/omega-node-install.sh --type=...)."""
+    try:
+        with open(NODE_TYPE_FILE) as fh:
+            value = fh.read().strip().lower()
+        if value in ('lxc', 'kvm', 'incus'):
+            return value
+    except OSError:
+        pass
+    return 'incus'
+
+
 LISTEN_PORT = int(os.environ.get('NODE_PORT', 5001))
 
-LXD_SOCKET = '/var/lib/incus/unix.socket'
+def _detect_socket():
+    """Find the Incus (or LXD) unix socket instead of assuming one path."""
+    candidates = [
+        os.environ.get('OMEGA_INCUS_SOCKET', ''),
+        '/var/lib/incus/unix.socket',
+        '/var/lib/incus/unix.socket.user',
+        '/var/snap/lxd/common/lxd/unix.socket',
+        '/var/lib/lxd/unix.socket',
+    ]
+    for path in candidates:
+        if path and os.path.exists(path):
+            return path
+    return '/var/lib/incus/unix.socket'
+
+
+LXD_SOCKET = _detect_socket()
 
 
 def _lxd_request(method, path, data=None, timeout=30):
@@ -448,7 +494,12 @@ def nonkvm_container_api():
 
 @app.route('/api/health')
 def health():
-    return jsonify({'status': 'ok'})
+    return jsonify({
+        'status': 'ok',
+        'node_type': node_type(),
+        'incus_socket': os.path.exists(LXD_SOCKET),
+        'kvm': os.path.exists('/dev/kvm'),
+    })
 
 
 @app.route('/api/debug/lxc_attach', methods=['POST'])
@@ -568,6 +619,14 @@ def create_container():
 
     if not name:
         return jsonify({'error': 'Name is required'}), 400
+
+    if node_type() == 'lxc' and vps_type in ('kvm', 'nonkvm'):
+        return jsonify({'error': "This node was installed as LXC-only. Re-run the node install with "
+                                 "--type=kvm (or --type=incus) to create %s VPS." % vps_type}), 400
+
+    if vps_type != 'nonkvm' and not os.path.exists(LXD_SOCKET):
+        return jsonify({'error': 'Incus/LXD is not installed on this node (socket %s missing). '
+                                 'Run: sudo bash scripts/omega-node-install.sh --type=%s' % (LXD_SOCKET, node_type())}), 500
 
     if vps_type == 'kvm' and not os.path.exists('/dev/kvm'):
         return jsonify({'error': 'KVM is not available on this node (/dev/kvm missing)'}), 400

@@ -233,6 +233,36 @@ checkbox is mandatory. Nesting is a non-destructive ON/OFF switch. The same thre
 choices are available as radio switches on the create form, so a VPS can be born as LXC,
 KVM or non-KVM.
 
+### Node types and one-command node add (new)
+
+Node install is now per type. Pick the type when you add the node:
+
+| Type | Installs | Can create |
+| --- | --- | --- |
+| `lxc` | Incus (containers only) | LXC VPS |
+| `kvm` | Incus + QEMU/KVM/libvirt (needs `/dev/kvm`) | LXC + KVM (+ non-KVM) |
+| `incus` | everything | LXC + KVM + non-KVM |
+
+**From the panel:** Nodes -> Add Node -> enter node name, the node VPS IP and the type ->
+*Generate command* -> run the command as root on that VPS. It downloads the agent from the
+panel, installs the chosen type, and connects the node. Example:
+
+```bash
+curl -fsSL 'http://PANEL_IP:5000/api/nodes/install.sh?key=KEY&name=node-1&ip=NODE_IP&type=kvm' | sudo bash
+```
+
+**By hand on the node:**
+
+```bash
+sudo bash scripts/omega-node-install.sh --type=kvm --bind=0.0.0.0
+sudo bash scripts/omega-node-connect.sh --panel http://PANEL_IP:5000 --key KEY --name node-1 --url http://NODE_IP:5001
+```
+
+Fixed in this version: the node agent now authenticates with `/etc/omega-panel/node-token`
+(the same token the panel stores). Before, the agent generated a different random key, so the
+node was added fine (`/api/health` is open) but every VPS create returned `401 Unauthorized`.
+An already-connected node is repaired by re-running the install command on it (same name).
+
 ## Verification
 
 See `VERIFY.md` for the build checks. Host-level KVM, Incus daemon, storage quota behavior and guest-OS boot support must still be validated on the target server because those depend on the actual hardware, kernel and virtualization environment.

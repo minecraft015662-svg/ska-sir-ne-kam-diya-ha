@@ -18,7 +18,7 @@ def main():
     db.init_db(); db.reset_stale_jobs()
     while True:
         try: pump()
-        except Exception as exc: print(f'[Omega jobs] {exc}',flush=True)
+        except Exception as exc: print(f'[Vizion jobs] {exc}',flush=True)
         time.sleep(2)
 
 if __name__=='__main__': main()

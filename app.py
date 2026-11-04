@@ -4979,24 +4979,53 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
                 <h2>Add Node</h2>
                 <button class="modal-x" onclick="closeModal('addNodeModal')">&times;</button>
             </div>
-            <form method="POST" action="/nodes/add">
+            <div id="nodeCmdBox">
+                <div class="form-group">
+                    <label>Node Name</label>
+                    <input type="text" id="ncName" class="form-control" placeholder="e.g. US-1">
+                </div>
+                <div class="form-group">
+                    <label>Node VPS ka IP (jis VPS ko connect karna hai)</label>
+                    <input type="text" id="ncIp" class="form-control" placeholder="e.g. 203.0.113.5">
+                </div>
+                <div class="form-group">
+                    <label>Node Type (install alag-alag hota hai)</label>
+                    <select id="ncType" class="form-control">
+                        <option value="lxc">LXC - sirf containers (halka)</option>
+                        <option value="kvm">KVM - VMs + containers (/dev/kvm chahiye)</option>
+                        <option value="incus" selected>Incus - sab kuch (LXC + KVM + non-KVM)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Panel URL (node is URL ko khol sake)</label>
+                    <input type="text" id="ncPanel" class="form-control" placeholder="http://PANEL_IP:5000">
+                </div>
+                <button type="button" class="btn btn-primary" style="width:100%;" onclick="genNodeCmd()">Generate command</button>
+                <div id="ncOut" style="display:none;margin-top:14px;">
+                    <small class="text-dim" style="font-size:11px;">Ye command us VPS (node) par root se chalao. Install + connect ek hi baar me ho jayega:</small>
+                    <pre id="ncCmd" style="background:#05080f;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px;white-space:pre-wrap;word-break:break-all;margin:8px 0;"></pre>
+                    <button type="button" class="btn" style="width:100%;" onclick="copyNodeCmd()">Copy command</button>
+                    <small class="text-dim" style="font-size:11px;display:block;margin-top:8px;">Node ke firewall/provider panel me port 5001 panel ke IP ke liye khula hona chahiye. Command khatam hote hi node "Nodes" list me aa jayega.</small>
+                </div>
+            </div>
+            <details style="margin-top:16px;">
+            <summary style="cursor:pointer;font-size:12px;color:var(--text-muted);">Manual add (advanced - agent pehle se chal raha ho)</summary>
+            <form method="POST" action="/nodes/add" style="margin-top:12px;">
                 <div class="form-group">
                     <label>Node Name</label>
                     <input type="text" name="name" class="form-control" placeholder="e.g. US-1" required>
                 </div>
                 <div class="form-group">
                     <label>Hostname / IP</label>
-                    <input type="text" name="hostname" class="form-control" placeholder="e.g. us1.example.com or 203.0.113.5" required>
+                    <input type="text" name="hostname" class="form-control" placeholder="e.g. 203.0.113.5" required>
                 </div>
                 <div class="form-group">
-                    <label>Node URL (for remote nodes)</label>
+                    <label>Node URL</label>
                     <input type="text" name="node_url" class="form-control" placeholder="e.g. http://203.0.113.5:5001">
-                    <small class="text-dim" style="font-size:11px;">Leave empty for local node. Remote nodes need the agent running.</small>
                 </div>
                 <div class="form-group">
-                    <label>API Key (for remote nodes)</label>
-                    <input type="text" name="api_key" class="form-control" placeholder="Paste the node agent's API key">
-                    <small class="text-dim" style="font-size:11px;">Shown in the node agent's startup output.</small>
+                    <label>API Key (node ki /etc/omega-panel/node-token ka content)</label>
+                    <input type="text" name="api_key" class="form-control" placeholder="node token">
                 </div>
                 <div class="form-group">
                     <label>Max VPS</label>
@@ -5004,6 +5033,31 @@ EMBEDDED_TEMPLATES = {'icons.html': """<svg xmlns="http://www.w3.org/2000/svg" s
                 </div>
                 <button type="submit" class="btn btn-primary" style="width:100%;">Add Node</button>
             </form>
+            </details>
+            <script>
+            (function(){
+              var p=document.getElementById('ncPanel'); if(p) p.value=location.origin;
+              window.genNodeCmd=function(){
+                var n=document.getElementById('ncName').value.trim();
+                var ip=document.getElementById('ncIp').value.trim();
+                var t=document.getElementById('ncType').value;
+                var panel=document.getElementById('ncPanel').value.trim().replace(/\\/+$/,'');
+                if(!/^[A-Za-z0-9._-]{2,64}$/.test(n)){alert('Node name 2-64 chars: letters, numbers, . _ -');return;}
+                if(!/^[A-Za-z0-9.:-]{3,253}$/.test(ip)){alert('Sahi node IP daalo');return;}
+                if(!/^https?:\\/\\//.test(panel)){alert('Panel URL http:// ya https:// se shuru hona chahiye');return;}
+                fetch('/api/nodes/enroll/key',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+                  if(!d.enroll_key){alert('Enrollment key nahi mili');return;}
+                  var u=panel+'/api/nodes/install.sh?key='+encodeURIComponent(d.enroll_key)+'&name='+encodeURIComponent(n)+'&ip='+encodeURIComponent(ip)+'&type='+encodeURIComponent(t)+'&panel='+encodeURIComponent(panel);
+                  document.getElementById('ncCmd').textContent="curl -fsSL '"+u+"' | sudo bash";
+                  document.getElementById('ncOut').style.display='block';
+                }).catch(function(){alert('Key fetch fail hua');});
+              };
+              window.copyNodeCmd=function(){
+                var t=document.getElementById('ncCmd').textContent;
+                if(navigator.clipboard){navigator.clipboard.writeText(t);}
+              };
+            })();
+            </script>
         </div>
     </div>
 
