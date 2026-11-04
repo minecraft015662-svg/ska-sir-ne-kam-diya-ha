@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import pty
 import random
 import select
@@ -10599,7 +10600,7 @@ def file_download(vps_id):
                 return Response(data, headers={'Content-Disposition': f"attachment; filename={os.path.basename(path)}", 'Content-Type': 'application/octet-stream'})
         else:
             archive_data = lxc_get_archive(vps['container_id'], path)
-            return Response(bits, headers={'Content-Disposition': f"attachment; filename={os.path.basename(path)}.tar", 'Content-Type': 'application/gzip'})
+            return Response(archive_data, headers={'Content-Disposition': f"attachment; filename={os.path.basename(path)}.tar", 'Content-Type': 'application/gzip'})
     except Exception as e:
         flash(f"Download failed: {str(e)}", 'error')
     return redirect(url_for('file_manager', vps_id=vps_id))
